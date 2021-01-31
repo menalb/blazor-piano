@@ -1,7 +1,7 @@
 @using Model
 @inject IJSRuntime JS;
 
-<button @onclick="PlayNote">@note.Name</button>
+<span class="key" @onclick="PlayNote">@note.Name</span>
 
 @code {
     [Parameter]

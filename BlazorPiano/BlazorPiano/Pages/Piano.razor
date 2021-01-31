@@ -3,20 +3,29 @@
 @using BlazorPiano.Components;
 @using Model
 
+<ul class="board">
 @foreach (var key in keys)
 {
-    <KeyComponent note="@key"></KeyComponent>
+        <li class="@key.Kind">
+            <KeyComponent note="@key"></KeyComponent>
+        </li>
 }
+</ul>
 
 @code {
     private IEnumerable<Key> keys = new List<Key>
 {
 new Key("white","C4"),
+new Key("black","C#4"),
 new Key("white","D4"),
+new Key("black","D#4"),
 new Key("white","E4"),
 new Key("white","F4"),
+new Key("black","F#4"),
 new Key("white","G4"),
+new Key("black","G#4"),
 new Key("white","A4"),
+new Key("black","A#4"),
 new Key("white","B4"),
 };
 }
