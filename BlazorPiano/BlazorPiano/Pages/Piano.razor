@@ -1,0 +1,22 @@
+@page "/piano"
+@inject IJSRuntime JS;
+@using BlazorPiano.Components;
+@using Model
+
+@foreach (var key in keys)
+{
+    <KeyComponent note="@key"></KeyComponent>
+}
+
+@code {
+    private IEnumerable<Key> keys = new List<Key>
+{
+new Key("white","C4"),
+new Key("white","D4"),
+new Key("white","E4"),
+new Key("white","F4"),
+new Key("white","G4"),
+new Key("white","A4"),
+new Key("white","B4"),
+};
+}

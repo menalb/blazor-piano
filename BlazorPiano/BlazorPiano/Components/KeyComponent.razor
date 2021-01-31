@@ -1,0 +1,14 @@
+@using Model
+@inject IJSRuntime JS;
+
+<button @onclick="PlayNote">@note.Name</button>
+
+@code {
+    [Parameter]
+    public Key note { get; set; }
+    private async Task PlayNote()
+    {
+        if (note.IsValid())
+            await JS.InvokeVoidAsync("PianoLib.playNote", note.Name);
+    }
+}
