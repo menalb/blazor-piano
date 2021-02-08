@@ -1,8 +1,8 @@
 namespace BlazorPiano.Model
 {
-    public class Key
+    public class Note
     {
-        public Key(string kind, string name, Octave octave)
+        public Note(string kind, string name, Octave octave)
         {
             Kind = kind;
             Name = name;

@@ -5,11 +5,18 @@
 
 @code {
     [Parameter]
-    public Key note { get; set; }
+    public Note note { get; set; }
+    [Parameter]
+    public EventCallback<Note> PlayedNote { get; set; }
+    [JSInvokable]
     private async Task PlayNote()
     {
         if (note.IsValid())
+        {
             await JS.InvokeVoidAsync("PianoLib.playNote", BuildKey());
+            await PlayedNote.InvokeAsync(note);
+            // StateHasChanged();
+        }
     }
 
     private string BuildKey() => note.Name + note.Octave.Number;

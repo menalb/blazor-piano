@@ -1,11 +1,29 @@
 @using Model
 @for (int i = 3; i < 6; i++)
 {
-    <OctaveComponent octaveNumber="@BuildOctave(i)"></OctaveComponent>
+    <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
 }
+<section>
+    <div>
+        <button type="button" class="btn" @onclick="Clear">Clear</button>
+    </div>
+    <div>
+        @FormatPlayedNoted()
+    </div>
+</section>
 
 @code{
+    private System.Text.StringBuilder playedNotes = new System.Text.StringBuilder();
     private Octave octave = new Octave(1);
 
     private Octave BuildOctave(int number) => new Octave(number);
+
+    private void PlayedNote(Note note)
+    {
+        playedNotes.Append($"{note.Name}{note.Octave.Number} ");
+    }
+
+    private string FormatPlayedNoted() => playedNotes.ToString();
+
+    private void Clear() => playedNotes = new System.Text.StringBuilder();
 }
