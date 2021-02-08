@@ -1,28 +1,11 @@
 @using Model
-
-<ul class="board">
-@foreach (var key in keys)
+@for (int i = 3; i < 6; i++)
 {
-        <li class="@key.Kind">
-            <KeyComponent note="@key"></KeyComponent>
-        </li>
+    <OctaveComponent octaveNumber="@BuildOctave(i)"></OctaveComponent>
 }
-</ul>
 
-@code {
-    private IEnumerable<Key> keys = new List<Key>
-{
-new Key("white","C4"),
-new Key("black","C#4"),
-new Key("white","D4"),
-new Key("black","D#4"),
-new Key("white","E4"),
-new Key("white","F4"),
-new Key("black","F#4"),
-new Key("white","G4"),
-new Key("black","G#4"),
-new Key("white","A4"),
-new Key("black","A#4"),
-new Key("white","B4"),
-};
+@code{
+    private Octave octave = new Octave(1);
+
+    private Octave BuildOctave(int number) => new Octave(number);
 }

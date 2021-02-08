@@ -1,7 +1,7 @@
 @using Model
 @inject IJSRuntime JS;
 
-<span class="key" @onclick="PlayNote">@note.Name</span>
+<span class="key" @onclick="PlayNote">@BuildKey()</span>
 
 @code {
     [Parameter]
@@ -9,6 +9,8 @@
     private async Task PlayNote()
     {
         if (note.IsValid())
-            await JS.InvokeVoidAsync("PianoLib.playNote", note.Name);
+            await JS.InvokeVoidAsync("PianoLib.playNote", BuildKey());
     }
+
+    private string BuildKey() => note.Name + note.Octave.Number;
 }

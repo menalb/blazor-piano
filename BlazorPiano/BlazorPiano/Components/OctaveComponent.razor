@@ -1,0 +1,35 @@
+@using Model
+
+<ul class="board">
+@foreach (var key in keys)
+{
+        <li class="@key.keyColor">
+            <KeyComponent note="@BuildKeyWithOctave(key,octaveNumber)"></KeyComponent>
+        </li>
+}
+</ul>
+
+@code {
+    [Parameter]
+    public Octave octaveNumber { get; set; }
+
+    
+private Key BuildKeyWithOctave(KeyConfig key, Octave octave) => new Key(key.keyColor,key.keyName ,octaveNumber);
+
+    private IEnumerable<KeyConfig> keys = new List<KeyConfig>{
+        new KeyConfig("white","C"),
+        new KeyConfig("black","C#"),
+        new KeyConfig("white","D"),
+        new KeyConfig("black","D#"),
+        new KeyConfig("white","E"),
+        new KeyConfig("white","F"),
+        new KeyConfig("black","F#"),
+        new KeyConfig("white","G"),
+        new KeyConfig("black","G#"),
+        new KeyConfig("white","A"),
+        new KeyConfig("black","A#"),
+        new KeyConfig("white","B")
+};
+
+private record KeyConfig(string keyColor, string keyName);
+}
