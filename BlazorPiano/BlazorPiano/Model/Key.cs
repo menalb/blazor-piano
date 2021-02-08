@@ -1,7 +1,5 @@
-
 namespace BlazorPiano.Model
 {
-
     public class Key
     {
         public Key(string kind, string name)
