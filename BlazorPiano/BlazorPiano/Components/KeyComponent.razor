@@ -1,7 +1,7 @@
 @using Model
 @inject IJSRuntime JS;
 
-<span class="key" @onclick="PlayNote">@BuildKey()</span>
+<span class="key" @onmousedown="Attack" @onmouseup="Release">@BuildKey()</span>
 
 @code {
     [Parameter]
@@ -17,6 +17,16 @@
             await PlayedNote.InvokeAsync(note);
             // StateHasChanged();
         }
+    }
+
+    private async Task Attack()
+    {
+        await JS.InvokeVoidAsync("PianoLib.attack", BuildKey());
+    }
+
+    private async Task Release()
+    {
+        await JS.InvokeVoidAsync("PianoLib.release", BuildKey());
     }
 
     private string BuildKey() => note.Name + note.Octave.Number;
