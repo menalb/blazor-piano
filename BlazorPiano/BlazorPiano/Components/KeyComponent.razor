@@ -21,7 +21,8 @@
 
     private async Task Attack()
     {
-        await JS.InvokeVoidAsync("PianoLib.attack", BuildKey());
+        await JS.InvokeVoidAsync("PianoLib.playNote", BuildKey());
+        await PlayedNote.InvokeAsync(note);
     }
 
     private async Task Release()
