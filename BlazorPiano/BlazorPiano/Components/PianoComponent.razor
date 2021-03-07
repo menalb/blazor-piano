@@ -1,8 +1,17 @@
 @using Model
-@for (int i = 3; i < 6; i++)
-{
-    <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
-}
+@inject IJSRuntime JS;
+
+<section>
+    <button type="button" class="btn btn-primary" disabled=@pianoButtonDisabled @onclick="SwitchToPiano">Piano</button>
+    <button type="button" class="btn btn-primary" disabled=@synthButtonDisabled @onclick="InitSynth">Synth</button>
+</section>
+<hr />
+<section>
+    @for (int i = 3; i < 6; i++)
+    {
+        <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
+    }
+</section>
 <section>
     <div>
         <button type="button" class="btn" @onclick="Clear">Clear</button>
@@ -15,6 +24,13 @@
 @code{
     private System.Text.StringBuilder playedNotes = new System.Text.StringBuilder();
     private Octave octave = new Octave(1);
+    private bool pianoButtonDisabled = false;
+    private bool synthButtonDisabled = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await InitSynth();
+    }
 
     private Octave BuildOctave(int number) => new Octave(number);
 
@@ -23,6 +39,18 @@
         playedNotes.Append($"{note.Name}{note.Octave.Number} ");
     }
 
+    private async Task SwitchToPiano()
+    {
+        await JS.InvokeVoidAsync("PianoLib.initPiano");
+        pianoButtonDisabled = true;
+        synthButtonDisabled = false;
+    }
+    private async Task InitSynth()
+    {
+        await JS.InvokeVoidAsync("PianoLib.initSynth");
+        synthButtonDisabled = true;
+        pianoButtonDisabled = false;
+    }
     private string FormatPlayedNoted() => playedNotes.ToString();
 
     private void Clear() => playedNotes = new System.Text.StringBuilder();
