@@ -2,8 +2,9 @@
 @inject IJSRuntime JS;
 
 <section>
-    <button type="button" class="btn btn-primary" disabled=@pianoButtonDisabled @onclick="SwitchToPiano">Piano</button>
-    <button type="button" class="btn btn-primary" disabled=@synthButtonDisabled @onclick="InitSynth">Synth</button>
+    <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
+        @onclick="SwitchToPiano">Piano</button>
+    <button type="button" class="btn btn-secondary" disabled=@synthButtonDisabled @onclick="InitSynth">Synth</button>
 </section>
 <hr />
 <section>

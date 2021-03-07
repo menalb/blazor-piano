@@ -34,9 +34,11 @@ export function play(note) {
 
 export function keyAttack(note) {
     synth.triggerAttack(note);
+    console.log('attack ' + note);
 }
 
 
 export function keyRelease() {
     synth.triggerRelease(Tone.now());
+    console.log('release ');
 }
