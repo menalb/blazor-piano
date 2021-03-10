@@ -8,14 +8,14 @@ export function initSynth() {
     init('');
 }
 
-export function playNote(note) {
+export function playNote(note: string) {
     play(note);
 }
 
-export function attack(note) {
+export function attack(note: string) {
     keyAttack(note);
 }
 
-export function release(note) {
+export function release(note: string) {
     keyRelease();
 }

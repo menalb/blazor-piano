@@ -2,7 +2,7 @@ import * as Tone from 'tone'
 
 let synth = createSynth().toDestination();
 
-export function init(type) {
+export function init(type: string) {
     if (type === 'piano') {
         synth = createPiano().toDestination()
     } else {
@@ -27,12 +27,12 @@ function createPiano() {
     })
 }
 
-export function play(note) {
+export function play(note: string) {
     synth.triggerAttackRelease(note, "8n");
 }
 
 
-export function keyAttack(note) {
+export function keyAttack(note: string) {
     synth.triggerAttack(note);
     console.log('attack ' + note);
 }
