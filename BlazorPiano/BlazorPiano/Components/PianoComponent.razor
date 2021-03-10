@@ -15,7 +15,7 @@
 </section>
 <section>
     <div>
-        <button type="button" class="btn" @onclick="Clear">Clear</button>
+        <button type="button" class="btn" @onclick="Reset">Reset</button>
     </div>
     <div>
         @FormatPlayedNoted()
@@ -54,5 +54,5 @@
     }
     private string FormatPlayedNoted() => playedNotes.ToString();
 
-    private void Clear() => playedNotes = new System.Text.StringBuilder();
+    private void Reset() => playedNotes = new System.Text.StringBuilder();
 }
