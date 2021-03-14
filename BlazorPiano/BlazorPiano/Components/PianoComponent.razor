@@ -1,5 +1,5 @@
 @using Model
-@inject IJSRuntime JS;
+@inject PianoGateway Piano;
 
 <section>
     <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
@@ -42,13 +42,13 @@
 
     private async Task SwitchToPiano()
     {
-        await JS.InvokeVoidAsync("PianoLib.initPiano");
+        await Piano.SwitchToPiano();
         pianoButtonDisabled = true;
         synthButtonDisabled = false;
     }
     private async Task InitSynth()
     {
-        await JS.InvokeVoidAsync("PianoLib.initSynth");
+        await Piano.SwitchToSinth();
         synthButtonDisabled = true;
         pianoButtonDisabled = false;
     }

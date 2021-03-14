@@ -1,5 +1,5 @@
 @using Model
-@inject IJSRuntime JS;
+@inject PianoGateway Piano;
 
 <span class="key" @onmousedown="Attack" @onmouseup="Release">@BuildKey()</span>
 
@@ -13,7 +13,7 @@
     {
         if (note.IsValid())
         {
-            await JS.InvokeVoidAsync("PianoLib.playNote", BuildKey());
+            await Piano.PlayNote(BuildKey());
             await PlayedNote.InvokeAsync(note);
             // StateHasChanged();
         }
@@ -21,13 +21,13 @@
 
     private async Task Attack()
     {
-        await JS.InvokeVoidAsync("PianoLib.attack", BuildKey());
+        await Piano.AttackNote(BuildKey());
         await PlayedNote.InvokeAsync(note);
     }
 
     private async Task Release()
     {
-        await JS.InvokeVoidAsync("PianoLib.release", BuildKey());
+        await Piano.ReleaseNote(BuildKey());
     }
 
     private string BuildKey() => note.Name + note.Octave.Number;
