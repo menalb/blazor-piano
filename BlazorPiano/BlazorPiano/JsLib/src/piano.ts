@@ -11,7 +11,7 @@ export function init(type: string) {
 }
 
 function createSynth() {
-    return new Tone.Synth();
+    return new Tone.PolySynth(Tone.Synth());
 }
 
 function createPiano() {
