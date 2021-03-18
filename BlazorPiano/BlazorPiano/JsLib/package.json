@@ -10,7 +10,9 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
+        "@types/webmidi": "^2.0.4",
         "tone": "^14.7.77",
+        "webmidi": "^2.5.2",
         "webpack": "^5.19.0",
         "webpack-cli": "^4.4.0"
     },

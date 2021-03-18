@@ -1,6 +1,6 @@
 import * as Tone from 'tone'
 
-let synth = createSynth().toDestination();
+let synth: Tone.PolySynth | Tone.Sampler = createSynth().toDestination();
 
 export function init(type: string) {
     if (type === 'piano') {
@@ -11,7 +11,7 @@ export function init(type: string) {
 }
 
 function createSynth() {
-    return new Tone.PolySynth(Tone.Synth());
+    return new Tone.PolySynth(Tone.Synth);
 }
 
 function createPiano() {
@@ -33,10 +33,12 @@ export function play(note: string) {
 
 
 export function keyAttack(note: string) {
-    synth.triggerAttack(note);
+    console.log('attack ' + note);
+    synth.triggerAttack(note);    
 }
 
 
-export function keyRelease() {
-    synth.triggerRelease(Tone.now());
+export function keyRelease(note: string) {
+    console.log('release ' + note);
+    synth.triggerRelease(note, Tone.now());
 }

@@ -1,4 +1,5 @@
 import { init, keyAttack, keyRelease, play } from './piano';
+import { init as initMidiKey } from './midi-key';
 
 export function initPiano() {
     init('piano');
@@ -17,5 +18,12 @@ export function attack(note: string) {
 }
 
 export function release(note: string) {
-    keyRelease();
+    keyRelease(note);
+}
+
+export function initMidi(dotNetObject: any) {
+    initMidiKey(m =>
+        dotNetObject.invokeMethodAsync('Log', m)
+    );
+
 }

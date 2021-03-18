@@ -1,7 +1,7 @@
 @using Model
 @inject PianoGateway Piano;
 
-<span class="key" @onmousedown="Attack" @onmouseup="Release">@BuildKey()</span>
+<span class="key" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">@BuildKey()</span>
 
 @code {
     [Parameter]
