@@ -32,13 +32,11 @@ export function play(note: string) {
 }
 
 
-export function keyAttack(note: string) {
-    console.log('attack ' + note);
+export function keyAttack(note: string) { 
     synth.triggerAttack(note);    
 }
 
 
 export function keyRelease(note: string) {
-    console.log('release ' + note);
     synth.triggerRelease(note, Tone.now());
 }

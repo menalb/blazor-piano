@@ -30,7 +30,7 @@
     [JSInvokable("PlayNote")]
     public void PlayNote(string note)
     {
-        notes.Append(note);
+        notes.Append(note + " ");
         Piano.PlayNote(note);
         StateHasChanged();
     }
