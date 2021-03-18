@@ -1,12 +1,17 @@
 @inject PianoGateway Piano;
 @inject IJSRuntime JS;
+@inject PianoGateway Piano;
 
 <button type="button" class="btn btn-secondary" @onclick="Init">Init</button>
 <div>
     @message
 </div>
+<div>
+    @notes.ToString()
+</div>
 @code {
     public string message = "";
+    private System.Text.StringBuilder notes = new System.Text.StringBuilder();
 
     [JSInvokable]
     private async Task Init()
@@ -15,11 +20,18 @@
         await JS.InvokeVoidAsync("PianoLib.initMidi", dotNetReference);
     }
 
-    [JSInvokable("Log")]
-    public void Log(string mex)
+    [JSInvokable("LogDevice")]
+    public void LogDevice(string mex)
     {
         message = mex;
         StateHasChanged();
     }
 
+    [JSInvokable("PlayNote")]
+    public void PlayNote(string note)
+    {
+        notes.Append(note);
+        Piano.PlayNote(note);
+        StateHasChanged();
+    }
 }

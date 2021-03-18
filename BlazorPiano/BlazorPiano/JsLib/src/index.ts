@@ -23,5 +23,8 @@ export function release(note: string) {
 }
 
 export function initMidi(dotNetObject: DotNet.DotNetObject) {
-    initMidiKey(message => dotNetObject.invokeMethodAsync('Log', message));
+    initMidiKey(
+        message => dotNetObject.invokeMethodAsync('LogDevice', message),
+        note=> dotNetObject.invokeMethodAsync('PlayNote', note),
+        );
 }
