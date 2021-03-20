@@ -1,0 +1,15 @@
+.navbar button {
+    margin-right: 1rem;
+}
+
+.played-notes {
+    padding: 1rem 0;
+}
+
+.midi-section {
+    padding-top: 1rem;
+}
+
+.piano-keyboard {
+    text-align: center;
+}

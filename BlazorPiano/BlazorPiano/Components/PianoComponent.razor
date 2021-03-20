@@ -3,27 +3,27 @@
 @inject PianoService Service;
 @implements IDisposable
 
-<section>
+<nav class="navbar navbar-expand-lg navbar-light bg-dark">
     <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
         @onclick="SwitchToPiano">Piano</button>
     <button type="button" class="btn btn-secondary" disabled=@synthButtonDisabled @onclick="InitSynth">Synth</button>
-</section>
-<hr />
-<section>
+</nav>
+
+<section class="piano-keyboard">
     @for (int i = 2; i < 6; i++)
     {
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
     }
 </section>
-<section>
+<section class="played-notes">
     <div>
-        <button type="button" class="btn" @onclick="Reset">Reset</button>
+        <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
     </div>
     <div>
         @FormatPlayedNoted()
     </div>
 </section>
-<section>
+<section class="midi-section">
     <MIDIComponent PlayedNote="((note)=> PlayANote(note))"></MIDIComponent>
 </section>
 
@@ -38,9 +38,9 @@
         await InitSynth();
         Service.OnPlayNote += (_note) => StateHasChanged();
     }
-    
+
     private void PlayANote(Note note)
-    {     
+    {
         Service.OnPlayNote(note);
     }
     private Octave BuildOctave(int number) => new Octave(number);

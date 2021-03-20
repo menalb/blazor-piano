@@ -49,3 +49,20 @@ a,
     right: 0.75rem;
     top: 0.5rem;
 }
+
+.btn-secondary {
+    color: white;
+    font-weight: bold;
+    background-color: darkorange;
+    border-color: #f16e00;
+}
+
+.btn-secondary:hover {
+    background-color: #f16e00;
+    border-color: darkorange;
+}
+
+.btn-secondary:disabled {
+    background-color: #f16e00;
+    border-color: darkorange;
+}
