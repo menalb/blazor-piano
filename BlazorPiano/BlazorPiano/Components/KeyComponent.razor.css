@@ -6,3 +6,31 @@
         padding: 0.25rem;
         width: 100%;
     }
+    
+    .key-played-odd {
+        animation-name: redfade-even;
+        animation-duration: 0.5s;
+    }
+    
+    .key-played-even {
+        animation-name: redfade-odd;
+        animation-duration: 0.5s;
+    }
+    
+    @keyframes redfade-even {
+        from {
+            background: red;
+        }
+        to {
+            background: transparent;
+        }
+    }
+    
+    @keyframes redfade-odd {
+        from {
+            background: red;
+        }
+        to {
+            background: transparent;
+        }
+    }

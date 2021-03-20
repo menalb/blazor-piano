@@ -3,13 +3,15 @@
 @inject PianoService Service;
 @implements IDisposable
 
-<span class="key" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">@BuildKey()</span>
+<span class="@keyCss" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">@BuildKey()</span>
 
 @code {
     [Parameter]
     public Note note { get; set; }
     [Parameter]
     public EventCallback<Note> PlayedNote { get; set; }
+    private string keyCss = "key";
+
     [JSInvokable]
     private async Task PlayNote()
     {
@@ -37,7 +39,13 @@
         if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
         {
             await PlayNote();
+
+            keyCss = "key " +
+                (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+
+            await InvokeAsync(StateHasChanged);
         }
+
     }
     protected override async Task OnInitializedAsync()
     {
@@ -50,7 +58,6 @@
     {
         Service.OnPlayNote -= async (_note) =>
             await ShouldPlayNote(_note);
-        //Service.OnPlayNote -= (note) => StateHasChanged();
     }
     private string BuildKey() => note.Name + note.Octave.Number;
 }
