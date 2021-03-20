@@ -1,9 +1,8 @@
-import webmidi from 'webmidi';
-import WebMidi, { Input } from 'webmidi'
+import WebMidi from 'webmidi'
 
 export const init = (
-    log: (message: string) => void,
-    play: (note: string) => void,
+    log: (deviceName: string) => void,
+    play: (note: MidiNote) => void,
 ) => {
 
     WebMidi.enable(() => {
@@ -13,12 +12,17 @@ export const init = (
             deviceName = device.name;
         });
         if (deviceName) {
-            const input = webmidi.getInputByName(deviceName);
+            const input = WebMidi.getInputByName(deviceName);
             if (input !== false) {
                 input.addListener('noteon', "all", function (e) {
-                    play(e.note.name + e.note.octave);
+                    play({ name: e.note.name, octave: e.note.octave });
                 });
             }
         }
     })
+}
+
+export interface MidiNote {
+    name: string;
+    octave: number;
 }

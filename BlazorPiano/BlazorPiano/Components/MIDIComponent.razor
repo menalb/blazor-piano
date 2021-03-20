@@ -1,17 +1,22 @@
+@using Model
 @inject PianoGateway Piano;
 @inject IJSRuntime JS;
 @inject PianoGateway Piano;
 
 <button type="button" class="btn btn-secondary" @onclick="Init">Init</button>
-<div>
-    @message
-</div>
-<div>
-    @notes.ToString()
-</div>
+@if (!string.IsNullOrEmpty(controllerName))
+{
+
+    <div>
+        MIDI: @controllerName
+    </div>
+}
+
 @code {
-    public string message = "";
+    public string controllerName = "";
     private System.Text.StringBuilder notes = new System.Text.StringBuilder();
+    [Parameter]
+    public EventCallback<Note> PlayedNote { get; set; }
 
     [JSInvokable]
     private async Task Init()
@@ -21,17 +26,17 @@
     }
 
     [JSInvokable("LogDevice")]
-    public void LogDevice(string mex)
+    public void LogDevice(string deviceName)
     {
-        message = mex;
+        controllerName = deviceName;
         StateHasChanged();
     }
 
     [JSInvokable("PlayNote")]
-    public void PlayNote(string note)
+    public async Task PlayNote(midiNote note)
     {
-        notes.Append(note + " ");
-        Piano.PlayNote(note);
+        await PlayedNote.InvokeAsync(new Note("", note.name, new Octave(note.octave)));
         StateHasChanged();
     }
+    public record midiNote(string name, int octave);
 }

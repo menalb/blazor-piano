@@ -24,13 +24,9 @@
     </div>
 </section>
 <section>
-    <MIDIComponent></MIDIComponent>
+    <MIDIComponent PlayedNote="((note)=> PlayANote(note))"></MIDIComponent>
 </section>
-<section>
-    <div>
-        <button class="btn btn-primary" @onclick="PlayANote">Click me</button>
-    </div>
-</section>
+
 @code{
     private System.Text.StringBuilder playedNotes = new System.Text.StringBuilder();
     private Octave octave = new Octave(1);
@@ -42,10 +38,10 @@
         await InitSynth();
         Service.OnPlayNote += (_note) => StateHasChanged();
     }
-
-    private void PlayANote()
-    {
-        Service.OnPlayNote(new Note("white", "C", new Octave(4)));
+    
+    private void PlayANote(Note note)
+    {     
+        Service.OnPlayNote(note);
     }
     private Octave BuildOctave(int number) => new Octave(number);
 
