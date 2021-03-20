@@ -7,9 +7,12 @@
 @if (!string.IsNullOrEmpty(controllerName))
 {
 
-    <div>
-        MIDI: @controllerName
-    </div>
+    <span class="midi-info">
+        <b>MIDI:</b>
+        <span title="midi name">
+            @controllerName
+        </span>
+    </span>
 }
 
 @code {

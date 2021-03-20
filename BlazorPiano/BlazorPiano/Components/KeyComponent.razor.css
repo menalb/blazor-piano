@@ -8,27 +8,27 @@
     }
     
     .key-played-odd {
-        animation-name: redfade-even;
-        animation-duration: 0.5s;
+        animation-name: coloredfade-even;
+        animation-duration: 1.0s;
     }
     
     .key-played-even {
-        animation-name: redfade-odd;
-        animation-duration: 0.5s;
+        animation-name: coloredfade-odd;
+        animation-duration: 1.0s;
     }
     
-    @keyframes redfade-even {
+    @keyframes coloredfade-even {
         from {
-            background: red;
+            background: #f16e00;
         }
         to {
             background: transparent;
         }
     }
     
-    @keyframes redfade-odd {
+    @keyframes coloredfade-odd {
         from {
-            background: red;
+            background: #f16e00;
         }
         to {
             background: transparent;
