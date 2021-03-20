@@ -1,5 +1,6 @@
 @using Model
 
+
 <ul class="board">
 @foreach (var key in keys)
 {
@@ -16,9 +17,11 @@
     public EventCallback<Note> PlayedNote { get; set; }
 
     
-private Note BuildKeyWithOctave(KeyConfig key, Octave octave) => new Note(key.keyColor,key.keyName ,octaveNumber);
+    private Note BuildKeyWithOctave(KeyConfig key, Octave octave) => new Note(key.keyColor,key.keyName ,octaveNumber);
 
-    private IEnumerable<KeyConfig> keys = new List<KeyConfig>{
+   
+    private IEnumerable<KeyConfig> keys = new List<KeyConfig>
+        {
         new KeyConfig("white","C"),
         new KeyConfig("black","C#"),
         new KeyConfig("white","D"),
@@ -31,7 +34,7 @@ private Note BuildKeyWithOctave(KeyConfig key, Octave octave) => new Note(key.ke
         new KeyConfig("white","A"),
         new KeyConfig("black","A#"),
         new KeyConfig("white","B")
-};
+    };
 
-private record KeyConfig(string keyColor, string keyName);
+    private record KeyConfig(string keyColor, string keyName);   
 }

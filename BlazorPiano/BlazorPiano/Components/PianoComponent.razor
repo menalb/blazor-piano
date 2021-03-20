@@ -1,5 +1,7 @@
 @using Model
 @inject PianoGateway Piano;
+@inject PianoService Service;
+@implements IDisposable
 
 <section>
     <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
@@ -22,9 +24,13 @@
     </div>
 </section>
 <section>
-<MIDIComponent></MIDIComponent>
+    <MIDIComponent></MIDIComponent>
 </section>
-
+<section>
+    <div>
+        <button class="btn btn-primary" @onclick="PlayANote">Click me</button>
+    </div>
+</section>
 @code{
     private System.Text.StringBuilder playedNotes = new System.Text.StringBuilder();
     private Octave octave = new Octave(1);
@@ -34,8 +40,13 @@
     protected override async Task OnInitializedAsync()
     {
         await InitSynth();
+        Service.OnPlayNote += (_note) => StateHasChanged();
     }
 
+    private void PlayANote()
+    {
+        Service.OnPlayNote(new Note("white", "C", new Octave(4)));
+    }
     private Octave BuildOctave(int number) => new Octave(number);
 
     private void PlayedNote(Note note)
@@ -58,4 +69,10 @@
     private string FormatPlayedNoted() => playedNotes.ToString();
 
     private void Reset() => playedNotes = new System.Text.StringBuilder();
+
+    public void Dispose()
+    {
+        Service.OnPlayNote -= (note) => StateHasChanged();
+    }
+
 }

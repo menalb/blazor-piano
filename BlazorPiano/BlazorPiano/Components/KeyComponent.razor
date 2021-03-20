@@ -1,5 +1,7 @@
 @using Model
 @inject PianoGateway Piano;
+@inject PianoService Service;
+@implements IDisposable
 
 <span class="key" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">@BuildKey()</span>
 
@@ -30,5 +32,25 @@
         await Piano.ReleaseNote(BuildKey());
     }
 
+    private async Task ShouldPlayNote(Note noteToPlay)
+    {
+        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+        {
+            await PlayNote();
+        }
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.Run(() =>
+            Service.OnPlayNote += async (_note) =>
+            await ShouldPlayNote(_note));
+    }
+
+    public void Dispose()
+    {
+        Service.OnPlayNote -= async (_note) =>
+            await ShouldPlayNote(_note);
+        //Service.OnPlayNote -= (note) => StateHasChanged();
+    }
     private string BuildKey() => note.Name + note.Octave.Number;
 }
