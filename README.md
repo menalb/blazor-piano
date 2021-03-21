@@ -8,3 +8,6 @@ Into the `JSLib` run:
 
 ## Blazor part
 `dotnet run`
+
+## Piano
+[![piano](demo/piano.png)]()
