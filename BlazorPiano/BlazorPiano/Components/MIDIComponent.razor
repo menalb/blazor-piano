@@ -1,9 +1,8 @@
 @using Model
-@inject PianoGateway Piano;
 @inject IJSRuntime JS;
 @inject PianoGateway Piano;
 
-<button type="button" class="btn btn-secondary" @onclick="Init">Init MIDI</button>
+<button type="button" class="btn btn-secondary" @onclick="Init">MIDI</button>
 @if (!string.IsNullOrEmpty(controllerName))
 {
 

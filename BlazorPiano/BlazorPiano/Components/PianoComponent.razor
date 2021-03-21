@@ -10,7 +10,7 @@
 </nav>
 
 <section class="piano-keyboard">
-    @for (int i = 2; i < 6; i++)
+    @for (int i = 1; i < 7; i++)
     {
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
     }
