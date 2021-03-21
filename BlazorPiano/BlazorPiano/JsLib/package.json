@@ -10,14 +10,14 @@
     "author": "",
     "license": "ISC",
     "dependencies": {
-        "@types/blazor__javascript-interop": "^3.1.2",
-        "@types/webmidi": "^2.0.4",
         "tone": "^14.7.77",
         "webmidi": "^2.5.2",
         "webpack": "^5.19.0",
         "webpack-cli": "^4.4.0"
     },
     "devDependencies": {
+        "@types/blazor__javascript-interop": "^3.1.2",
+        "@types/webmidi": "^2.0.4",
         "@babel/core": "^7.12.10",
         "babel-loader": "^8.2.2",
         "ts-loader": "^8.0.17",
