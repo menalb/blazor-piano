@@ -4,31 +4,39 @@
 @implements IDisposable
 
 <nav class="navbar navbar-expand-lg navbar-light bg-dark">
-    <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
-        @onclick="SwitchToPiano">Piano</button>
-    <button type="button" class="btn btn-secondary" disabled=@synthButtonDisabled @onclick="InitSynth">Synth</button>
+    <span class="mode-switch">
+        <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
+            @onclick="SwitchToPiano">Piano</button>
+        <button type="button" class="btn btn-secondary" disabled=@synthButtonDisabled
+            @onclick="InitSynth">Synth</button>
+    </span>
+    <span class="midi-switch">
+        <MIDIComponent PlayedNote="((note)=> PlayANote(note))"></MIDIComponent>
+    </span>
 </nav>
 
 <section class="piano-keyboard">
-    @for (int i = 1; i < 7; i++)
+    @for (int i = 2; i < 6; i++)
     {
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
     }
 </section>
-<section class="played-notes">
-    <div>
-        <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
-    </div>
-    <div>
-        @FormatPlayedNoted()
-    </div>
-</section>
-<section class="midi-section">
-    <MIDIComponent PlayedNote="((note)=> PlayANote(note))"></MIDIComponent>
-</section>
-
-@code{
-    private System.Text.StringBuilder playedNotes = new System.Text.StringBuilder();
+@if (playedNotes.Any())
+{
+    <section class="played-notes">
+        <div>
+            <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
+        </div>
+        <ul class="list-group-flush">
+        @foreach (var note in playedNotes)
+        {
+            <li class="list-group-item">@note</li>
+        }
+        </ul>
+    </section>
+}
+@code {
+    private Stack<string> playedNotes = new Stack<string>();
     private Octave octave = new Octave(1);
     private bool pianoButtonDisabled = false;
     private bool synthButtonDisabled = true;
@@ -47,7 +55,7 @@
 
     private void PlayedNote(Note note)
     {
-        playedNotes.Append($"{note.Name}{note.Octave.Number} ");
+        playedNotes.Push($"{note.Name}{note.Octave.Number} ");
     }
 
     private async Task SwitchToPiano()
@@ -62,9 +70,8 @@
         synthButtonDisabled = true;
         pianoButtonDisabled = false;
     }
-    private string FormatPlayedNoted() => playedNotes.ToString();
 
-    private void Reset() => playedNotes = new System.Text.StringBuilder();
+    private void Reset() => playedNotes = new Stack<string>();
 
     public void Dispose()
     {

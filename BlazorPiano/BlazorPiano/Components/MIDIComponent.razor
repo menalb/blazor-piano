@@ -2,7 +2,6 @@
 @inject IJSRuntime JS;
 @inject PianoGateway Piano;
 
-<button type="button" class="btn btn-secondary" @onclick="Init">MIDI</button>
 @if (!string.IsNullOrEmpty(controllerName))
 {
 
@@ -13,6 +12,7 @@
         </span>
     </span>
 }
+<button type="button" class="btn btn-secondary" @onclick="Init">MIDI</button>
 
 @code {
     public string controllerName = "";
