@@ -6,9 +6,13 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-dark">
     <span class="mode-switch">
         <button type="button" class="btn btn-secondary" disabled=@pianoButtonDisabled
-            @onclick="SwitchToPiano">Piano</button>
+                @onclick="SwitchToPiano">
+            Piano
+        </button>
         <button type="button" class="btn btn-secondary" disabled=@synthButtonDisabled
-            @onclick="InitSynth">Synth</button>
+                @onclick="InitSynth">
+            Synth
+        </button>
     </span>
     <span class="midi-switch">
         <MIDIComponent PlayedNote="((note)=> PlayANote(note))"></MIDIComponent>
@@ -21,10 +25,10 @@
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
     }
 </section>
-<section>
-    <br />
-    <Notifications @ref="NotificationComponent" ReceivedNote="((note)=> PlayANote(note))"
-        Connected="(e)=>OnConnected()" />
+<section class="notifications">
+    <Notifications @ref="NotificationComponent"
+                   ReceivedNote="((note)=> PlayANotifiedNote(note))"
+                   Connected="(e)=>OnConnected()" />
 </section>
 @if (playedNotes.Any())
 {
@@ -62,20 +66,24 @@
         isConnected = true;
     }
 
+    private void PlayANotifiedNote(NotifiedNote note)
+    {
+        Service.OnPlayNote(note);
+    }
+
     private void PlayANote(Note note)
     {
-        Console.WriteLine("Play: " + note.Name);
         Service.OnPlayNote(note);
-        
     }
+
     private Octave BuildOctave(int number) => new Octave(number);
 
     private async Task PlayedNote(Note note)
-    {        
+    {
         playedNotes.Push($"{note.Name}{note.Octave.Number} ");
-                
-        if (isConnected && NotificationComponent is not null)
-        {
+      
+        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        {            
             await NotificationComponent.NotifyNote(note);
         }
     }

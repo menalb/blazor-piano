@@ -17,15 +17,16 @@
     {
         if (note.IsValid())
         {
-            await Piano.PlayNote(BuildKey());
-            await PlayedNote.InvokeAsync(note);
+            await Piano.PlayNote(BuildKey());            
+            
             // StateHasChanged();
         }
     }
 
     private async Task Attack()
-    {
+    {        
         await Piano.AttackNote(BuildKey());
+        Console.WriteLine(note.GetType().Name);
         await PlayedNote.InvokeAsync(note);
     }
 
@@ -39,6 +40,7 @@
         if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
         {
             await PlayNote();
+            await PlayedNote.InvokeAsync(noteToPlay);
 
             keyCss = "key " +
                 (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");

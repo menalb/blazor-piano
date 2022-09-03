@@ -1,4 +1,5 @@
 ﻿@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
 html,
 body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -43,26 +44,34 @@ a,
     z-index: 1000;
 }
 
-#blazor-error-ui .dismiss {
-    cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
-}
+    #blazor-error-ui .dismiss {
+        cursor: pointer;
+        position: absolute;
+        right: 0.75rem;
+        top: 0.5rem;
+    }
 
 .btn-secondary {
     color: white;
     font-weight: bold;
-    background-color: darkorange;
-    border-color: #f16e00;
+    background-color: darkorange !important;
+    border-color: #f16e00 !important;
 }
 
-.btn-secondary:hover {
-    background-color: #f16e00;
-    border-color: darkorange;
+    .btn-secondary:hover {
+        background-color: #f16e00;
+        border-color: darkorange;
+    }
+
+    .btn-secondary:disabled {
+        background-color: #f16e00;
+        border-color: darkorange;
+    }
+
+.notifications {
+    padding: 2rem 1rem 1rem 2rem;
 }
 
-.btn-secondary:disabled {
-    background-color: #f16e00;
-    border-color: darkorange;
+.notifications label{
+    margin:0;
 }

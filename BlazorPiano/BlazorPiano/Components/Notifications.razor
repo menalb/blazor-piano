@@ -8,19 +8,27 @@
 @implements IDisposable
 
 <section>
+    <div>
+        @webSocket.State.ToString()
+    </div>
+    @if (webSocket.State != WebSocketState.Open)
+    {
+        <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
+            <div class="form-group mb-3 row">
+                <label for="username" class="col-form-label col-sm-2">Enter your name:</label>
 
-    <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
-        <div class="input-group mb-3">
-            <label for="username" class="form-label">Enter your name:</label>
+                <InputText id="username"
+                       @bind-Value="connectUserModel.Username"
+                       class="form-control col-sm-6"
+                       placeholder="Enter your name to connect"
+                       aria-label="Name" />
 
-            <InputText id="username" @bind-Value="searchBoxModel.Username" class="form-control" placeholder="Name"
-                aria-label="Name" />
-
-            <button type="submit" class="btn btn-primary">Connect</button>
-        </div>
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-    </EditForm>
+                <button type="submit" class="btn btn-secondary">Connect</button>
+            </div>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+        </EditForm>
+    }
 
     @if (webSocket.State == WebSocketState.Open)
     {
@@ -28,22 +36,33 @@
             <div>
                 Connected!
             </div>
-            @message
-        </div>        
+            <div>
+                <button type="button" class="btn btn-secondary" @onclick="Disconnect">Disconnect</button>
+            </div>
+            <div>
+                @message
+            </div>
+        </div>
     }
 </section>
+<div>
+    <button type="button" class="btn btn-secondary"
+            @onclick="Test">
+        Test
+    </button>
+</div>
 @code {
 
     [Parameter]
     public EventCallback<bool> Connected { get; set; }
     [Parameter]
-    public EventCallback<Note> ReceivedNote { get; set; }
+    public EventCallback<NotifiedNote> ReceivedNote { get; set; }
 
     CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
     ClientWebSocket webSocket = new ClientWebSocket();
     private EditContext editContext;
 
-    private SearchBoxModel searchBoxModel { get; set; }
+    private ConnectedUserModel connectUserModel { get; set; }
 
     private Random rnd = new Random();
 
@@ -51,8 +70,8 @@
 
     protected override void OnInitialized()
     {
-        searchBoxModel = new SearchBoxModel { Username = "" };
-        editContext = new(searchBoxModel);
+        connectUserModel = new ConnectedUserModel { Username = "" };
+        editContext = new(connectUserModel);
     }
 
     public async Task NotifyNote(Note note)
@@ -90,18 +109,15 @@
 
     async Task Send(Note note)
     {
-        //var note = new NoteToPlay { note = "C", octave = 4 };
-        Message action = new Message
-        {
-            action = "sendmessage",
-            data = new NoteToPlay { note = note.Name, octave = note.Octave.Number }
-        };
+        Message action = new Message("sendmessage", new NoteToPlay(note.Name, note.Octave.Number));
+
         var serializedMessage = System.Text.Json.JsonSerializer.Serialize(action, new JsonSerializerOptions()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            });
+
         var dataToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(serializedMessage));
-        Console.WriteLine(dataToSend);
+        
         await webSocket.SendAsync(dataToSend, WebSocketMessageType.Text, true, disposalTokenSource.Token);
     }
 
@@ -122,10 +138,23 @@
             var notification = System.Text.Json.JsonSerializer.Deserialize<NotifiedMessage>(receivedAsText);
             if (notification is not null)
             {
-                Note receivedNote = new Note("", notification.message.note, new Octave(notification.message.octave));
+                NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), "red");
                 await ReceivedNote.InvokeAsync(receivedNote);
             }
         }
+    }
+
+    public async Task Test()
+    {
+        var receivedNote = new NotifiedNote("", "A", new Octave(4), "red");
+        await ReceivedNote.InvokeAsync(receivedNote);
+    }
+
+    private void Disconnect()
+    {
+        connectUserModel = new ConnectedUserModel();
+        disposalTokenSource.Cancel();
+        _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
     }
 
     public void Dispose()
@@ -134,30 +163,15 @@
         _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
     }
 
-    private class SearchBoxModel
+    private record ConnectedUserModel
     {
         [Required]
         public string Username { get; set; }
     }
-    
-    // try with records
-    private class NoteToPlay
-    {
-        public string note { get; set; }
-        public int octave { get; set; }
-    }
 
-    private class Message
-    {
-        public string action { get; set; }
-        public NoteToPlay data { get; set; }
-    }
+    private record NoteToPlay(string note, int octave);
 
+    private record Message(string action, NoteToPlay data);
 
-    private class NotifiedMessage
-    {
-        public string color { get; set; }
-        public NoteToPlay message { get; set; }
-    }
-
+    private record NotifiedMessage(string color, NoteToPlay message);
 }
