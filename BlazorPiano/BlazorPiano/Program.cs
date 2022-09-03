@@ -1,12 +1,8 @@
 using System;
 using System.Net.Http;
-using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Text;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace BlazorPiano
 {
@@ -20,6 +16,11 @@ namespace BlazorPiano
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
             builder.Services.AddScoped<PianoGateway>();
             builder.Services.AddSingleton<PianoService>();
+            builder.Services.AddSingleton(
+                new WebSocketApiConfig 
+                { 
+                    Uri = builder.Configuration["WebSocketApi:Uri"] ?? throw new ArgumentNullException("Invalid Websocket API Uri in configuration") 
+                });
 
             await builder.Build().RunAsync();
         }

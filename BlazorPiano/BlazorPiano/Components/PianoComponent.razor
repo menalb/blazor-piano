@@ -21,6 +21,11 @@
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
     }
 </section>
+<section>
+    <br />
+    <Notifications @ref="NotificationComponent" ReceivedNote="((note)=> PlayANote(note))"
+        Connected="(e)=>OnConnected()" />
+</section>
 @if (playedNotes.Any())
 {
     <section class="played-notes">
@@ -28,18 +33,23 @@
             <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
         </div>
         <ul class="list-group-flush">
-        @foreach (var note in playedNotes)
-        {
-            <li class="list-group-item">@note</li>
-        }
+            @foreach (var note in playedNotes)
+            {
+                <li class="list-group-item">@note</li>
+            }
         </ul>
     </section>
 }
 @code {
+
     private Stack<string> playedNotes = new Stack<string>();
     private Octave octave = new Octave(1);
     private bool pianoButtonDisabled = false;
     private bool synthButtonDisabled = true;
+
+    private Notifications? NotificationComponent;
+
+    private bool isConnected = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -47,15 +57,27 @@
         Service.OnPlayNote += (_note) => StateHasChanged();
     }
 
+    private void OnConnected()
+    {
+        isConnected = true;
+    }
+
     private void PlayANote(Note note)
     {
+        Console.WriteLine("Play: " + note.Name);
         Service.OnPlayNote(note);
+        
     }
     private Octave BuildOctave(int number) => new Octave(number);
 
-    private void PlayedNote(Note note)
-    {
+    private async Task PlayedNote(Note note)
+    {        
         playedNotes.Push($"{note.Name}{note.Octave.Number} ");
+                
+        if (isConnected && NotificationComponent is not null)
+        {
+            await NotificationComponent.NotifyNote(note);
+        }
     }
 
     private async Task SwitchToPiano()

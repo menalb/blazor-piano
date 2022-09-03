@@ -1,0 +1,163 @@
+@using System.Net.WebSockets
+@using System.Threading
+@using System.Text
+@using System.Text.Json
+@using System.ComponentModel.DataAnnotations
+@using Model
+@inject WebSocketApiConfig websocketConfig
+@implements IDisposable
+
+<section>
+
+    <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
+        <div class="input-group mb-3">
+            <label for="username" class="form-label">Enter your name:</label>
+
+            <InputText id="username" @bind-Value="searchBoxModel.Username" class="form-control" placeholder="Name"
+                aria-label="Name" />
+
+            <button type="submit" class="btn btn-primary">Connect</button>
+        </div>
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    </EditForm>
+
+    @if (webSocket.State == WebSocketState.Open)
+    {
+        <div>
+            <div>
+                Connected!
+            </div>
+            @message
+        </div>        
+    }
+</section>
+@code {
+
+    [Parameter]
+    public EventCallback<bool> Connected { get; set; }
+    [Parameter]
+    public EventCallback<Note> ReceivedNote { get; set; }
+
+    CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
+    ClientWebSocket webSocket = new ClientWebSocket();
+    private EditContext editContext;
+
+    private SearchBoxModel searchBoxModel { get; set; }
+
+    private Random rnd = new Random();
+
+    private string message { get; set; } = "";
+
+    protected override void OnInitialized()
+    {
+        searchBoxModel = new SearchBoxModel { Username = "" };
+        editContext = new(searchBoxModel);
+    }
+
+    public async Task NotifyNote(Note note)
+    {
+        await Send(note);
+    }
+
+    private async Task HandleConnect()
+    {
+        if (editContext.Validate())
+        {
+            await Connect();
+        }
+    }
+
+    async Task Connect()
+    {
+        if (webSocket == null || webSocket.State != WebSocketState.Open)
+        {
+            webSocket = new ClientWebSocket();
+            disposalTokenSource = new CancellationTokenSource();
+
+            string userId = Guid.NewGuid().ToString();
+            string[] colors = new string[] { "red", "green", "yellow", "orange", "purle" };
+            string color = colors[rnd.Next(0, 4)];
+            await webSocket.ConnectAsync(new Uri($"{websocketConfig.Uri}?userId={userId}&color={color}"), disposalTokenSource.Token);
+
+            if (webSocket.State == WebSocketState.Open)
+            {
+                await Connected.InvokeAsync();
+            }
+            _ = ReceiveLoop();
+        }
+    }
+
+    async Task Send(Note note)
+    {
+        //var note = new NoteToPlay { note = "C", octave = 4 };
+        Message action = new Message
+        {
+            action = "sendmessage",
+            data = new NoteToPlay { note = note.Name, octave = note.Octave.Number }
+        };
+        var serializedMessage = System.Text.Json.JsonSerializer.Serialize(action, new JsonSerializerOptions()
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+        var dataToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(serializedMessage));
+        Console.WriteLine(dataToSend);
+        await webSocket.SendAsync(dataToSend, WebSocketMessageType.Text, true, disposalTokenSource.Token);
+    }
+
+    async Task ReceiveLoop()
+    {
+        var buffer = new ArraySegment<byte>(new byte[1024]);
+        while (!disposalTokenSource.IsCancellationRequested)
+        {
+            // Note that the received block might only be part of a larger message. If this applies in your scenario,
+            // check the received.EndOfMessage and consider buffering the blocks until that property is true.
+            // Or use a higher-level library such as SignalR.
+            var received = await webSocket.ReceiveAsync(buffer, disposalTokenSource.Token);
+            var receivedAsText = Encoding.UTF8.GetString(buffer.Array ?? new byte[] { }, 0, received.Count);
+
+            Console.WriteLine(receivedAsText);
+            message += receivedAsText + "\n";
+            StateHasChanged();
+            var notification = System.Text.Json.JsonSerializer.Deserialize<NotifiedMessage>(receivedAsText);
+            if (notification is not null)
+            {
+                Note receivedNote = new Note("", notification.message.note, new Octave(notification.message.octave));
+                await ReceivedNote.InvokeAsync(receivedNote);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        disposalTokenSource.Cancel();
+        _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+    }
+
+    private class SearchBoxModel
+    {
+        [Required]
+        public string Username { get; set; }
+    }
+    
+    // try with records
+    private class NoteToPlay
+    {
+        public string note { get; set; }
+        public int octave { get; set; }
+    }
+
+    private class Message
+    {
+        public string action { get; set; }
+        public NoteToPlay data { get; set; }
+    }
+
+
+    private class NotifiedMessage
+    {
+        public string color { get; set; }
+        public NoteToPlay message { get; set; }
+    }
+
+}
