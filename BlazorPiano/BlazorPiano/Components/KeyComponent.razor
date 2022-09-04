@@ -3,28 +3,47 @@
 @inject PianoService Service;
 @implements IDisposable
 
-<span class="@keyCss" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">@BuildKey()</span>
+<span class="@keyCss" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">
+    @if (showUsername)
+    {
+        <span class="key-username key-username-color fade-out @usernameCss">
+            <i class="arrow up"></i>
+            @username
+        </span>
+    }
+    @BuildKey()
+</span>
 
+<style>
+    .key-username-color {
+        color: @usernameColor;
+        font-weight: bold;
+    }
+</style>
 @code {
     [Parameter]
     public Note note { get; set; }
     [Parameter]
     public EventCallback<Note> PlayedNote { get; set; }
     private string keyCss = "key";
+    private string username = "";
+    private string usernameCss = "";
+    private string usernameColor = "";
+    private bool showUsername = false;
 
     [JSInvokable]
     private async Task PlayNote()
     {
         if (note.IsValid())
         {
-            await Piano.PlayNote(BuildKey());            
-            
+            await Piano.PlayNote(BuildKey());
+
             // StateHasChanged();
         }
     }
 
     private async Task Attack()
-    {        
+    {
         await Piano.AttackNote(BuildKey());
         Console.WriteLine(note.GetType().Name);
         await PlayedNote.InvokeAsync(note);
@@ -39,11 +58,25 @@
     {
         if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
         {
+            showUsername = false;
+            await InvokeAsync(StateHasChanged);
+
             await PlayNote();
             await PlayedNote.InvokeAsync(noteToPlay);
 
-            keyCss = "key " +
-                (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+            if (noteToPlay is NotifiedNote)
+            {
+                var notifiedNote = noteToPlay as NotifiedNote;
+                username = notifiedNote.Username;
+                usernameColor = notifiedNote.Color;
+
+                showUsername = true;
+            }
+            else
+            {
+                keyCss = "key " +
+                    (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+            }
 
             await InvokeAsync(StateHasChanged);
         }

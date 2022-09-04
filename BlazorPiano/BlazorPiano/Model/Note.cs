@@ -18,11 +18,13 @@ namespace BlazorPiano.Model
 
     public class NotifiedNote : Note
     {
-        public NotifiedNote(string kind, string name, Octave octave, string color) : base(kind, name, octave)
+        public NotifiedNote(string kind, string name, Octave octave, string color, string username) : base(kind, name, octave)
         {
             Color = color;
+            Username = username;
         }
 
         public string Color { get; }
+        public string Username { get; }
     }
 }

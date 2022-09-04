@@ -1,36 +1,74 @@
-    .key {
-        display: flex;
-        cursor: pointer;
-        align-items: flex-end;
-        justify-content: center;
-        padding: 0.25rem;
-        width: 100%;
+.key {
+    display: flex;
+    cursor: pointer;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0.25rem;
+    width: 100%;
+    position: relative;
+}
+
+.key-played-odd {
+    animation-name: coloredfade-even;
+    animation-duration: 1.0s;
+}
+
+.key-played-even {
+    animation-name: coloredfade-odd;
+    animation-duration: 1.0s;
+}
+
+@keyframes coloredfade-even {
+    from {
+        background: #f16e00;
     }
-    
-    .key-played-odd {
-        animation-name: coloredfade-even;
-        animation-duration: 1.0s;
+
+    to {
+        background: transparent;
     }
-    
-    .key-played-even {
-        animation-name: coloredfade-odd;
-        animation-duration: 1.0s;
+}
+
+@keyframes coloredfade-odd {
+    from {
+        background: #f16e00;
     }
-    
-    @keyframes coloredfade-even {
-        from {
-            background: #f16e00;
-        }
-        to {
-            background: transparent;
-        }
+
+    to {
+        background: transparent;
     }
-    
-    @keyframes coloredfade-odd {
-        from {
-            background: #f16e00;
-        }
-        to {
-            background: transparent;
-        }
+}
+
+.key-username {
+    position: absolute;
+    background-color: white;
+    bottom: -3.15rem;
+    z-index: 99;
+}
+
+.arrow {
+    border: solid;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 3px;
+}
+
+.up {
+    transform: rotate(-135deg);
+    -webkit-transform: rotate(-135deg);
+}
+
+.fade-out {
+    -webkit-animation: fadeinout 1s linear forwards;
+    animation: fade 1s linear forwards;
+}
+
+
+@keyframes fade {
+    0%,100% {
+        opacity: 0
     }
+
+    10% {
+        opacity: 1
+    }
+}

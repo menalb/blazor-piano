@@ -7,10 +7,7 @@
 @inject WebSocketApiConfig websocketConfig
 @implements IDisposable
 
-<section>
-    <div>
-        @webSocket.State.ToString()
-    </div>
+<section>    
     @if (webSocket.State != WebSocketState.Open)
     {
         <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
@@ -39,9 +36,6 @@
             <div>
                 <button type="button" class="btn btn-secondary" @onclick="Disconnect">Disconnect</button>
             </div>
-            <div>
-                @message
-            </div>
         </div>
     }
 </section>
@@ -65,8 +59,6 @@
     private ConnectedUserModel connectUserModel { get; set; }
 
     private Random rnd = new Random();
-
-    private string message { get; set; } = "";
 
     protected override void OnInitialized()
     {
@@ -97,7 +89,11 @@
             string userId = Guid.NewGuid().ToString();
             string[] colors = new string[] { "red", "green", "yellow", "orange", "purle" };
             string color = colors[rnd.Next(0, 4)];
-            await webSocket.ConnectAsync(new Uri($"{websocketConfig.Uri}?userId={userId}&color={color}"), disposalTokenSource.Token);
+            await webSocket.ConnectAsync(new Uri(
+                $"{websocketConfig.Uri}?userId={userId}&username={connectUserModel.Username}&color={color}"
+            ),
+                disposalTokenSource.Token
+            );
 
             if (webSocket.State == WebSocketState.Open)
             {
@@ -133,12 +129,12 @@
             var receivedAsText = Encoding.UTF8.GetString(buffer.Array ?? new byte[] { }, 0, received.Count);
 
             Console.WriteLine(receivedAsText);
-            message += receivedAsText + "\n";
+            
             StateHasChanged();
             var notification = System.Text.Json.JsonSerializer.Deserialize<NotifiedMessage>(receivedAsText);
             if (notification is not null)
             {
-                NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), "red");
+                NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), notification.color, notification.username);
                 await ReceivedNote.InvokeAsync(receivedNote);
             }
         }
@@ -146,7 +142,7 @@
 
     public async Task Test()
     {
-        var receivedNote = new NotifiedNote("", "A", new Octave(4), "red");
+        var receivedNote = new NotifiedNote("", "A", new Octave(4), "red", "Gigi");
         await ReceivedNote.InvokeAsync(receivedNote);
     }
 
@@ -173,5 +169,5 @@
 
     private record Message(string action, NoteToPlay data);
 
-    private record NotifiedMessage(string color, NoteToPlay message);
+    private record NotifiedMessage(string color, NoteToPlay message, string username);
 }
