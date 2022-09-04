@@ -36,17 +36,21 @@
         <div>
             <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
         </div>
-        <ul class="list-group-flush">
+        <div class="played-notes-container">
             @foreach (var note in playedNotes)
             {
-                <li class="list-group-item">@note</li>
+                <button class="btn btn-dark" @onclick="()=>PlayANote(BuildReplayNote(note))">
+                    <span class="played-note" style="color:@(note is NotifiedNote ? (note as NotifiedNote).Color : "" )">
+                        @($"{note.Name}{note.Octave.Number}")
+                    </span>
+                </button>
             }
-        </ul>
+        </div>
     </section>
 }
 @code {
 
-    private Stack<string> playedNotes = new Stack<string>();
+    private Stack<Note> playedNotes = new Stack<Note>();
     private Octave octave = new Octave(1);
     private bool pianoButtonDisabled = false;
     private bool synthButtonDisabled = true;
@@ -80,12 +84,20 @@
 
     private async Task PlayedNote(Note note)
     {
-        playedNotes.Push($"{note.Name}{note.Octave.Number} ");
-      
+        if (note is not ReplayNote)
+        {
+            playedNotes.Push(note);
+        }
+
         if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
-        {            
+        {
             await NotificationComponent.NotifyNote(note);
         }
+    }
+
+    private ReplayNote BuildReplayNote(Note note)
+    {
+        return new ReplayNote(note.Kind, note.Name, note.Octave);
     }
 
     private async Task SwitchToPiano()
@@ -101,7 +113,7 @@
         pianoButtonDisabled = false;
     }
 
-    private void Reset() => playedNotes = new Stack<string>();
+    private void Reset() => playedNotes = new Stack<Note>();
 
     public void Dispose()
     {

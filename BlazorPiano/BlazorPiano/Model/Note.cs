@@ -27,4 +27,11 @@ namespace BlazorPiano.Model
         public string Color { get; }
         public string Username { get; }
     }
+
+    public class ReplayNote : Note
+    {
+        public ReplayNote(string kind, string name, Octave octave) : base(kind, name, octave)
+        {
+        }
+    }
 }

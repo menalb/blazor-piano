@@ -1,23 +1,28 @@
 .navbar {
-  justify-content: space-between;
+    justify-content: space-between;
 }
 
-.navbar button {
-  margin-right: 1rem;
-}
+    .navbar button {
+        margin-right: 1rem;
+    }
 
 .played-notes {
-  padding: 1rem 0;
+    padding: 1rem 0;
 }
 
 .piano-keyboard {
-  text-align: center;
+    text-align: center;
 }
 
-.played-notes ul {
-  padding-top: 1rem;
-  display: inline-block;
-  max-height: 20vh;
-  width: 10rem;
-  overflow-y: scroll;
+.played-notes-container {
+    padding-top: 1rem;
+    
 }
+    .played-notes-container button{
+        margin: 0.125rem;
+    }
+
+    .played-note {
+        padding: 0.25rem;
+        font-weight: bold;
+    }

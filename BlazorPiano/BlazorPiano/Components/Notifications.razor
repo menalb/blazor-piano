@@ -7,7 +7,11 @@
 @inject WebSocketApiConfig websocketConfig
 @implements IDisposable
 
-<section>    
+<section>
+    <h2>
+        Play with the community!
+    </h2>
+
     @if (webSocket.State != WebSocketState.Open)
     {
         <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
@@ -31,7 +35,7 @@
     {
         <div>
             <div>
-                Connected!
+                <span title="connected" class="dot connected"></span> Connected!
             </div>
             <div>
                 <button type="button" class="btn btn-secondary" @onclick="Disconnect">Disconnect</button>
@@ -39,12 +43,12 @@
         </div>
     }
 </section>
-<div>
+@*<div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
-</div>
+</div>*@
 @code {
 
     [Parameter]
@@ -113,7 +117,7 @@
             });
 
         var dataToSend = new ArraySegment<byte>(Encoding.UTF8.GetBytes(serializedMessage));
-        
+
         await webSocket.SendAsync(dataToSend, WebSocketMessageType.Text, true, disposalTokenSource.Token);
     }
 
@@ -129,7 +133,7 @@
             var receivedAsText = Encoding.UTF8.GetString(buffer.Array ?? new byte[] { }, 0, received.Count);
 
             Console.WriteLine(receivedAsText);
-            
+
             StateHasChanged();
             var notification = System.Text.Json.JsonSerializer.Deserialize<NotifiedMessage>(receivedAsText);
             if (notification is not null)
