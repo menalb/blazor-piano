@@ -54,7 +54,9 @@
     [Parameter]
     public EventCallback<bool> Connected { get; set; }
     [Parameter]
-    public EventCallback<NotifiedNote> ReceivedNote { get; set; }
+    public EventCallback<NotifiedNote> NoteReceived { get; set; }
+    [Parameter]
+    public EventCallback<IEnumerable<PlayerJoin>> PlayerJoined { get; set; }
 
     CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
     ClientWebSocket webSocket = new ClientWebSocket();
@@ -91,7 +93,7 @@
             disposalTokenSource = new CancellationTokenSource();
 
             string userId = Guid.NewGuid().ToString();
-            string[] colors = new string[] { "red", "green", "yellow", "orange", "purle" };
+            string[] colors = new string[] { "red", "green", "brown", "orange", "purle", "darkgray" };
             string color = colors[rnd.Next(0, 4)];
             await webSocket.ConnectAsync(new Uri(
                 $"{websocketConfig.Uri}?userId={userId}&username={connectUserModel.Username}&color={color}"
@@ -136,19 +138,37 @@
 
             StateHasChanged();
             var notification = System.Text.Json.JsonSerializer.Deserialize<NotifiedMessage>(receivedAsText);
-            if (notification is not null)
+            try
             {
-                NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), notification.color, notification.username);
-                await ReceivedNote.InvokeAsync(receivedNote);
+                if (notification is not null && notification.message is not null && !string.IsNullOrEmpty(notification.message.note))
+                {
+                    NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), notification.color, notification.username);
+                    await NoteReceived.InvokeAsync(receivedNote);
+                }
+                else
+                {
+                    var action = System.Text.Json.JsonSerializer.Deserialize<NotifiedActionMessage>(receivedAsText);
+                    Console.WriteLine($"{action.action}");
+                    await PlayerJoined.InvokeAsync(action.users.Select(action => new PlayerJoin(action.username, action.color, action.is_you)));
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                throw e;
             }
         }
     }
 
-    public async Task Test()
-    {
-        var receivedNote = new NotifiedNote("", "A", new Octave(4), "red", "Gigi");
-        await ReceivedNote.InvokeAsync(receivedNote);
-    }
+    //public async Task Test()
+    //{
+    //    await PlayerJoined.InvokeAsync(new PlayerJoin("AAA", "red"));
+    //}
+    //public async Task Test()
+    //{
+    //    var receivedNote = new NotifiedNote("", "A", new Octave(4), "red", "Gigi");
+    //    await NoteReceived.InvokeAsync(receivedNote);
+    //}
 
     private void Disconnect()
     {
@@ -174,4 +194,8 @@
     private record Message(string action, NoteToPlay data);
 
     private record NotifiedMessage(string color, NoteToPlay message, string username);
+
+    private record NotifiedPlayers(string username, string color, bool is_you);
+
+    private record NotifiedActionMessage(string action, IEnumerable<NotifiedPlayers> users);
 }

@@ -1,6 +1,7 @@
 @using Model
 @inject PianoGateway Piano;
 @inject PianoService Service;
+@inject BrowserResizeService BrowserResize;
 @implements IDisposable
 
 <nav class="navbar navbar-expand-lg navbar-light bg-dark">
@@ -27,8 +28,23 @@
 </section>
 <section class="notifications">
     <Notifications @ref="NotificationComponent"
-                   ReceivedNote="((note)=> PlayANotifiedNote(note))"
+                   NoteReceived="((note)=> PlayANotifiedNote(note))"
+                   PlayerJoined="((players)=> OnPayerJoined(players))"
                    Connected="(e)=>OnConnected()" />
+    <ul class="list-group">
+        @foreach (var player in Players)
+        {
+            <li class="list-group-item">
+                <b style="color:@player.Color">
+                    @player.Username
+                </b>
+                @if (player.IsYou)
+                {
+                    <i> (you) </i>
+                }
+            </li>
+        }
+    </ul>
 </section>
 @if (playedNotes.Any())
 {
@@ -48,7 +64,15 @@
         </div>
     </section>
 }
+
+@*<div>
+    <p><strong>Inner Height</strong> @InnerHeight</p>
+    <p><strong>Inner Width</strong> @InnerWidth</p>
+</div>*@
 @code {
+    int InnerHeight = 0;
+    int InnerWidth = 0;
+
 
     private Stack<Note> playedNotes = new Stack<Note>();
     private Octave octave = new Octave(1);
@@ -57,13 +81,25 @@
 
     private Notifications? NotificationComponent;
 
+    private List<PlayerJoin> Players = new List<PlayerJoin>();
+
     private bool isConnected = false;
 
     protected override async Task OnInitializedAsync()
     {
+        //BrowserResize.OnResize += BrowserHasResized;
+
         await Init();
         Service.OnPlayNote += (_note) => StateHasChanged();
     }
+
+    //private async Task BrowserHasResized()
+    //{
+    //    InnerHeight = await BrowserResize.GetInnerHeight();
+    //    InnerWidth = await BrowserResize.GetInnerWidth();
+
+    //    StateHasChanged();
+    //}
 
     private void OnConnected()
     {
@@ -114,6 +150,11 @@
         pianoButtonDisabled = false;
     }
 
+    private void OnPayerJoined(IEnumerable<PlayerJoin> players)
+    {        
+        Players = players.Select(p => p).ToList();        
+    }
+
     private async Task Init()
     {
         await SwitchToPiano();
@@ -123,6 +164,7 @@
 
     public void Dispose()
     {
+        //BrowserResize.OnResize -= BrowserHasResized;
         Service.OnPlayNote -= (note) => StateHasChanged();
     }
 
