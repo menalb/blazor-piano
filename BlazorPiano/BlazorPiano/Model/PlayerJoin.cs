@@ -1,8 +1,8 @@
 ﻿namespace BlazorPiano.Model
 {
-    public class PlayerJoin
+    public class PlayerInfo
     {
-        public PlayerJoin(string username, string color, bool isYou)
+        public PlayerInfo(string username, string color, bool isYou)
         {
             Username = username;
             Color = color;

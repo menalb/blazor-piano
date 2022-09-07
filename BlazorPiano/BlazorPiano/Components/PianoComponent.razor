@@ -29,7 +29,8 @@
 <section class="notifications">
     <Notifications @ref="NotificationComponent"
                    NoteReceived="((note)=> PlayANotifiedNote(note))"
-                   PlayerJoined="((players)=> OnPayerJoined(players))"
+                   PlayerJoined="((player)=> OnPayerJoined(player))"
+                   PlayerLeft="((player)=> OnPayerLeft(player))"
                    Connected="(e)=>OnConnected()" />
     <ul class="list-group">
         @foreach (var player in Players)
@@ -55,7 +56,10 @@
         <div class="played-notes-container">
             @foreach (var note in playedNotes)
             {
-                <button class="btn btn-dark" @onclick="()=>PlayANote(BuildReplayNote(note))">
+                <button title="@(note is NotifiedNote ? (note as NotifiedNote).Username : "you") played"
+                    class="btn btn-dark" 
+                    @onclick="()=>PlayANote(BuildReplayNote(note))"
+                    >
                     <span class="played-note" style="color:@(note is NotifiedNote ? (note as NotifiedNote).Color : "" )">
                         @($"{note.Name}{note.Octave.Number}")
                     </span>
@@ -81,7 +85,7 @@
 
     private Notifications? NotificationComponent;
 
-    private List<PlayerJoin> Players = new List<PlayerJoin>();
+    private List<PlayerInfo> Players = new List<PlayerInfo>();
 
     private bool isConnected = false;
 
@@ -150,9 +154,18 @@
         pianoButtonDisabled = false;
     }
 
-    private void OnPayerJoined(IEnumerable<PlayerJoin> players)
-    {        
-        Players = players.Select(p => p).ToList();        
+    private void OnPayerJoined(PlayerInfo player)
+    {
+        Players.Add(player);
+    }
+
+    private void OnPayerLeft(PlayerInfo player)
+    {
+        var playerToRemove = Players.SingleOrDefault(p => p.Username == player.Username);
+        if (playerToRemove is not null)
+        {
+            Players.Remove(playerToRemove);
+        }
     }
 
     private async Task Init()
