@@ -65,7 +65,12 @@
 
 @keyframes fade {
     0%,100% {
-        opacity: 0
+        opacity: 0;
+        visibility:hidden;
+    }
+
+    1% {
+        visibility: visible;
     }
 
     10% {
