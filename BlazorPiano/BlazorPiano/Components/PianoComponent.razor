@@ -137,14 +137,29 @@
         Service.OnPlayNote(note);
     }
 
-    private void AttackedNote(Note note)
+    private async Task AttackedNote(Note note)
     {
-        Console.WriteLine("Attack " + note.Name);
+        Console.WriteLine("Attack " + note.Name);        
+
+        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        {
+            await NotificationComponent.NotifyAttackNote(note);
+        }
     }
 
-    private void ReleasedNote(Note note)
+    private async Task ReleasedNote(Note note)
     {
         Console.WriteLine("Release " + note.Name);
+
+        if (note is not ReplayNote)
+        {
+            playedNotes.Push(note);
+        }
+
+        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        {
+            await NotificationComponent.NotifyReleaseNote(note);
+        }
     }
 
     private Octave BuildOctave(int number) => new Octave(number);

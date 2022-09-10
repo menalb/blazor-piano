@@ -54,7 +54,7 @@
 
         await AttackedNote.InvokeAsync(note);
 
-        await PlayedNote.InvokeAsync(note);
+        //await PlayedNote.InvokeAsync(note);
     }
 
     private async Task Release()
@@ -100,7 +100,7 @@
             showUsername = false;
             await InvokeAsync(StateHasChanged);
 
-            await Attack();
+            await Piano.AttackNote(BuildKey());
             //await PlayedNote.InvokeAsync(noteToPlay);
 
             if (noteToPlay is NotifiedNote)
@@ -128,7 +128,7 @@
             showUsername = false;
             await InvokeAsync(StateHasChanged);
 
-            await Release();
+            await Piano.ReleaseNote(BuildKey());
             await PlayedNote.InvokeAsync(noteToPlay);
 
             //if (noteToPlay is NotifiedNote)

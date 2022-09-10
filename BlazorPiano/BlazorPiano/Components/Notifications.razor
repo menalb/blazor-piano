@@ -82,7 +82,17 @@
 
     public async Task NotifyNote(Note note)
     {
-        await Send(note);
+        await Send("play", note);
+    }
+
+    public async Task NotifyAttackNote(Note note)
+    {
+        await Send("attack", note);
+    }
+
+    public async Task NotifyReleaseNote(Note note)
+    {
+        await Send("release", note);
     }
 
     private async Task HandleConnect()
@@ -117,11 +127,11 @@
         }
     }
 
-    async Task Send(Note note)
+    async Task Send(string action, Note note)
     {
-        Message action = new Message("sendmessage", new NoteToPlay(note.Name, note.Octave.Number));
+        Message message = new Message("sendmessage", new NoteToPlay(action, note.Name, note.Octave.Number));
 
-        var serializedMessage = System.Text.Json.JsonSerializer.Serialize(action, new JsonSerializerOptions()
+        var serializedMessage = System.Text.Json.JsonSerializer.Serialize(message, new JsonSerializerOptions()
             {
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             });
@@ -151,7 +161,18 @@
                 if (notification is not null && notification.message is not null && !string.IsNullOrEmpty(notification.message.note))
                 {
                     NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), notification.color, notification.username);
-                    await NoteReceived.InvokeAsync(receivedNote);
+                    if (notification.message.action == "attack")
+                    {
+                        await AttackNoteReceived.InvokeAsync(receivedNote);
+                    }
+                    else if (notification.message.action == "release")
+                    {
+                        await ReleaseNoteReceived.InvokeAsync(receivedNote);
+                    }
+                    else
+                    {
+                        await NoteReceived.InvokeAsync(receivedNote);
+                    }
                 }
                 else
                 {
@@ -181,7 +202,7 @@
         var receivedNote = new NotifiedNote("", "G#", new Octave(4), "red", "Gigi");
         await NoteReceived.InvokeAsync(receivedNote);
         await Task.Delay(2000);
-        
+
         await AttackNoteReceived.InvokeAsync(receivedNote);
 
         await Task.Delay(2000);
@@ -212,7 +233,7 @@
         public string Username { get; set; }
     }
 
-    private record NoteToPlay(string note, int octave);
+    private record NoteToPlay(string action, string note, int octave);
 
     private record Message(string action, NoteToPlay data);
 
