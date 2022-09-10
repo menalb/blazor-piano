@@ -2,12 +2,16 @@
 
 
 <ul class="board">
-@foreach (var key in keys)
-{
+    @foreach (var key in keys)
+    {
         <li class="@key.keyColor">
-            <KeyComponent PlayedNote="((note) => PlayedNote.InvokeAsync(note))" note="@BuildKeyWithOctave(key,octaveNumber)"></KeyComponent>
+            <KeyComponent PlayedNote="((note) => PlayedNote.InvokeAsync(note))"
+                      AttackedNote="((note) => AttackedNote.InvokeAsync(note))"
+                      ReleasedNote="((note) => ReleasedNote.InvokeAsync(note))"
+                      note="@BuildKeyWithOctave(key,octaveNumber)">
+            </KeyComponent>
         </li>
-}
+    }
 </ul>
 
 @code {
@@ -16,10 +20,15 @@
     [Parameter]
     public EventCallback<Note> PlayedNote { get; set; }
 
-    
-    private Note BuildKeyWithOctave(KeyConfig key, Octave octave) => new Note(key.keyColor,key.keyName ,octaveNumber);
+    [Parameter]
+    public EventCallback<Note> AttackedNote { get; set; }
+    [Parameter]
+    public EventCallback<Note> ReleasedNote { get; set; }
 
-   
+
+    private Note BuildKeyWithOctave(KeyConfig key, Octave octave) => new Note(key.keyColor, key.keyName, octaveNumber);
+
+
     private IEnumerable<KeyConfig> keys = new List<KeyConfig>
         {
         new KeyConfig("white","C"),
@@ -36,5 +45,5 @@
         new KeyConfig("white","B")
     };
 
-    private record KeyConfig(string keyColor, string keyName);   
+    private record KeyConfig(string keyColor, string keyName);
 }

@@ -23,12 +23,19 @@
 <section class="piano-keyboard">
     @for (int i = 2; i < 6; i++)
     {
-        <OctaveComponent PlayedNote="((note) => PlayedNote(note))" octaveNumber="@BuildOctave(i)"></OctaveComponent>
+        <OctaveComponent PlayedNote="((note) => PlayedNote(note))"
+                     AttackedNote="((note) => AttackedNote(note))"
+                     ReleasedNote="((note) => ReleasedNote(note))"
+                     octaveNumber="@BuildOctave(i)">
+        </OctaveComponent>
     }
 </section>
 <section class="notifications">
     <Notifications @ref="NotificationComponent"
                    NoteReceived="((note)=> PlayANotifiedNote(note))"
+                   AttackNoteReceived="((note)=> AttackANotifiedNote(note))"
+                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"
+
                    PlayerJoined="((player)=> OnPayerJoined(player))"
                    PlayerLeft="((player)=> OnPayerLeft(player))"
                    Connected="(e)=>OnConnected()" />
@@ -57,9 +64,8 @@
             @foreach (var note in playedNotes)
             {
                 <button title="@(note is NotifiedNote ? (note as NotifiedNote).Username : "you") played"
-                    class="btn btn-dark" 
-                    @onclick="()=>PlayANote(BuildReplayNote(note))"
-                    >
+                class="btn btn-dark"
+                @onclick="()=>PlayANote(BuildReplayNote(note))">
                     <span class="played-note" style="color:@(note is NotifiedNote ? (note as NotifiedNote).Color : "" )">
                         @($"{note.Name}{note.Octave.Number}")
                     </span>
@@ -95,6 +101,8 @@
 
         await Init();
         Service.OnPlayNote += (_note) => StateHasChanged();
+        Service.OnAttackNote += (note) => StateHasChanged();
+        Service.OnReleaseNote += (note) => StateHasChanged();
     }
 
     //private async Task BrowserHasResized()
@@ -110,6 +118,19 @@
         isConnected = true;
     }
 
+    private async Task AttackANotifiedNote(NotifiedNote note)
+    {
+        Service.OnAttackNote(note);
+
+        await AttackedNote(note);
+    }
+    private async Task ReleaseANotifiedNote(NotifiedNote note)
+    {
+        Service.OnReleaseNote(note);
+
+        await ReleasedNote(note);
+    }
+
     private void PlayANotifiedNote(NotifiedNote note)
     {
         Service.OnPlayNote(note);
@@ -118,6 +139,27 @@
     private void PlayANote(Note note)
     {
         Service.OnPlayNote(note);
+    }
+
+    private async Task AttackedNote(Note note)
+    {
+        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        {
+            await NotificationComponent.NotifyAttackNote(note);
+        }
+    }
+
+    private async Task ReleasedNote(Note note)
+    {
+        if (note is not ReplayNote)
+        {
+            playedNotes.Push(note);
+        }
+
+        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        {
+            await NotificationComponent.NotifyReleaseNote(note);
+        }
     }
 
     private Octave BuildOctave(int number) => new Octave(number);
@@ -179,6 +221,8 @@
     {
         //BrowserResize.OnResize -= BrowserHasResized;
         Service.OnPlayNote -= (note) => StateHasChanged();
+        Service.OnAttackNote -= (note) => StateHasChanged();
+        Service.OnReleaseNote -= (note) => StateHasChanged();
     }
 
 }

@@ -3,10 +3,10 @@
 @inject PianoService Service;
 @implements IDisposable
 
-<span class="@keyCss" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">
+<span class="@keyCss" @onmousedown="Attack" @onmouseup="Release">
     @if (showUsername)
     {
-        <span class="key-username key-username-color fade-out @usernameCss">
+        <span class="key-username key-username-color @usernameCss @fadeCss">
             <i class="arrow up"></i>
             @username
         </span>
@@ -25,11 +25,18 @@
     public Note note { get; set; }
     [Parameter]
     public EventCallback<Note> PlayedNote { get; set; }
+
+    [Parameter]
+    public EventCallback<Note> AttackedNote { get; set; }
+    [Parameter]
+    public EventCallback<Note> ReleasedNote { get; set; }
+
     private string keyCss = "key";
     private string username = "";
     private string usernameCss = "";
     private string usernameColor = "";
     private bool showUsername = false;
+    private string fadeCss = "";
 
     [JSInvokable]
     private async Task PlayNote()
@@ -45,18 +52,21 @@
     private async Task Attack()
     {
         await Piano.AttackNote(BuildKey());
-        Console.WriteLine(note.GetType().Name);
-        await PlayedNote.InvokeAsync(note);
+
+        await AttackedNote.InvokeAsync(note);
     }
 
     private async Task Release()
     {
         await Piano.ReleaseNote(BuildKey());
+
+        await ReleasedNote.InvokeAsync(note);
     }
 
+    // For now this method has to stay to support the MIDI controller
     private async Task ShouldPlayNote(Note noteToPlay)
-    {
-        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+    {        
+        if (IsThisNote(noteToPlay))
         {
             showUsername = false;
             await InvokeAsync(StateHasChanged);
@@ -69,6 +79,7 @@
                 var notifiedNote = noteToPlay as NotifiedNote;
                 username = notifiedNote.Username;
                 usernameColor = notifiedNote.Color;
+                fadeCss = "fade-in-out";
 
                 showUsername = true;
             }
@@ -80,19 +91,78 @@
 
             await InvokeAsync(StateHasChanged);
         }
-
     }
+
+    private async Task ShouldAttackNote(Note noteToPlay)
+    {
+        if (IsThisNote(noteToPlay))
+        {
+            showUsername = false;
+            await InvokeAsync(StateHasChanged);
+
+            await Piano.AttackNote(BuildKey());
+
+            if (noteToPlay is NotifiedNote)
+            {
+                var notifiedNote = noteToPlay as NotifiedNote;
+                username = notifiedNote.Username;
+                usernameColor = notifiedNote.Color;
+                
+                fadeCss = "fade-in";
+
+                showUsername = true;
+            }
+            else
+            {
+                keyCss = "key " +
+                    (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ShouldReleaseNote(Note noteToPlay)
+    {
+        if (IsThisNote(noteToPlay))
+        {
+            fadeCss = "fade-out";
+            await InvokeAsync(StateHasChanged);
+
+            await Piano.ReleaseNote(BuildKey());
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await Task.Run(() =>
+        {
             Service.OnPlayNote += async (_note) =>
-            await ShouldPlayNote(_note));
+            await ShouldPlayNote(_note);
+
+            Service.OnAttackNote += async (_note) =>
+            await ShouldAttackNote(_note);
+
+            Service.OnReleaseNote += async (_note) =>
+            await ShouldReleaseNote(_note);
+        });
     }
 
     public void Dispose()
     {
         Service.OnPlayNote -= async (_note) =>
             await ShouldPlayNote(_note);
+
+        Service.OnAttackNote -= async (_note) =>
+            await ShouldAttackNote(_note);
+
+        Service.OnReleaseNote -= async (_note) =>
+            await ShouldReleaseNote(_note);
     }
+
     private string BuildKey() => note.Name + note.Octave.Number;
+
+    private bool IsThisNote(Note noteToPlay) => note.Equals(noteToPlay);
 }
