@@ -93,15 +93,18 @@
 
     }
 
+    private bool IsThisNote(Note noteToPlay) 
+    => note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number;
+
+
     private async Task ShouldAttackNote(Note noteToPlay)
     {
-        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+        if (IsThisNote(noteToPlay))
         {
             showUsername = false;
             await InvokeAsync(StateHasChanged);
 
             await Piano.AttackNote(BuildKey());
-            //await PlayedNote.InvokeAsync(noteToPlay);
 
             if (noteToPlay is NotifiedNote)
             {
@@ -123,7 +126,7 @@
 
     private async Task ShouldReleaseNote(Note noteToPlay)
     {
-        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+        if (IsThisNote(noteToPlay))
         {
             showUsername = false;
             await InvokeAsync(StateHasChanged);
