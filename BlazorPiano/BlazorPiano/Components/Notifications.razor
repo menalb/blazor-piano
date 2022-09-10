@@ -43,18 +43,24 @@
         </div>
     }
 </section>
-@*<div>
+<div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
-</div>*@
+</div>
 @code {
 
     [Parameter]
     public EventCallback<bool> Connected { get; set; }
     [Parameter]
     public EventCallback<NotifiedNote> NoteReceived { get; set; }
+
+    [Parameter]
+    public EventCallback<NotifiedNote> AttackNoteReceived { get; set; }
+    [Parameter]
+    public EventCallback<NotifiedNote> ReleaseNoteReceived { get; set; }
+
     [Parameter]
     public EventCallback<PlayerInfo> PlayerJoined { get; set; }
     [Parameter]
@@ -170,10 +176,17 @@
         }
     }
 
-    //public async Task Test()
-    //{
-    //    await PlayerJoined.InvokeAsync(new PlayerJoin("AAA", "red"));
-    //}
+    public async Task Test()
+    {
+        var receivedNote = new NotifiedNote("", "G#", new Octave(4), "red", "Gigi");
+        await NoteReceived.InvokeAsync(receivedNote);
+        await Task.Delay(2000);
+        
+        await AttackNoteReceived.InvokeAsync(receivedNote);
+
+        await Task.Delay(2000);
+        await ReleaseNoteReceived.InvokeAsync(receivedNote);
+    }
     //public async Task Test()
     //{
     //    var receivedNote = new NotifiedNote("", "A", new Octave(4), "red", "Gigi");

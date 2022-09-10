@@ -3,7 +3,7 @@
 @inject PianoService Service;
 @implements IDisposable
 
-<span class="@keyCss" @onmousedown="Attack" @onmouseout="Release" @onmouseup="Release">
+<span class="@keyCss" @onmousedown="Attack" @onmouseup="Release">
     @if (showUsername)
     {
         <span class="key-username key-username-color fade-out @usernameCss">
@@ -25,6 +25,12 @@
     public Note note { get; set; }
     [Parameter]
     public EventCallback<Note> PlayedNote { get; set; }
+
+    [Parameter]
+    public EventCallback<Note> AttackedNote { get; set; }
+    [Parameter]
+    public EventCallback<Note> ReleasedNote { get; set; }
+
     private string keyCss = "key";
     private string username = "";
     private string usernameCss = "";
@@ -45,13 +51,17 @@
     private async Task Attack()
     {
         await Piano.AttackNote(BuildKey());
-        Console.WriteLine(note.GetType().Name);
+
+        await AttackedNote.InvokeAsync(note);
+
         await PlayedNote.InvokeAsync(note);
     }
 
     private async Task Release()
     {
         await Piano.ReleaseNote(BuildKey());
+
+        await ReleasedNote.InvokeAsync(note);
     }
 
     private async Task ShouldPlayNote(Note noteToPlay)
@@ -82,17 +92,88 @@
         }
 
     }
+
+    private async Task ShouldAttackNote(Note noteToPlay)
+    {
+        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+        {
+            showUsername = false;
+            await InvokeAsync(StateHasChanged);
+
+            await Attack();
+            //await PlayedNote.InvokeAsync(noteToPlay);
+
+            if (noteToPlay is NotifiedNote)
+            {
+                var notifiedNote = noteToPlay as NotifiedNote;
+                username = notifiedNote.Username;
+                usernameColor = notifiedNote.Color;
+
+                showUsername = true;
+            }
+            else
+            {
+                keyCss = "key " +
+                    (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+            }
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ShouldReleaseNote(Note noteToPlay)
+    {
+        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+        {
+            showUsername = false;
+            await InvokeAsync(StateHasChanged);
+
+            await Release();
+            await PlayedNote.InvokeAsync(noteToPlay);
+
+            //if (noteToPlay is NotifiedNote)
+            //{
+            //    var notifiedNote = noteToPlay as NotifiedNote;
+            //    username = notifiedNote.Username;
+            //    usernameColor = notifiedNote.Color;
+
+            //    showUsername = true;
+            //}
+            //else
+            //{
+            //    keyCss = "key " +
+            //        (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
+            //}
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
         await Task.Run(() =>
+        {
             Service.OnPlayNote += async (_note) =>
-            await ShouldPlayNote(_note));
+            await ShouldPlayNote(_note);
+
+            Service.OnAttackNote += async (_note) =>
+            await ShouldAttackNote(_note);
+
+            Service.OnReleaseNote += async (_note) =>
+            await ShouldReleaseNote(_note);
+        });
     }
 
     public void Dispose()
     {
         Service.OnPlayNote -= async (_note) =>
             await ShouldPlayNote(_note);
+
+        Service.OnAttackNote -= async (_note) =>
+            await ShouldAttackNote(_note);
+
+        Service.OnReleaseNote -= async (_note) =>
+            await ShouldReleaseNote(_note);
     }
     private string BuildKey() => note.Name + note.Octave.Number;
 }
