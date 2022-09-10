@@ -1,3 +1,5 @@
+using System;
+
 namespace BlazorPiano.Model
 {
     public class Note
@@ -14,6 +16,20 @@ namespace BlazorPiano.Model
 
         public bool IsValid() => !(string.IsNullOrEmpty(Name) || string.IsNullOrEmpty(Kind)) && IsOctaveValid();
         private bool IsOctaveValid() => Octave is not null && Octave.IsValid();
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            Note note = obj as Note;
+            if (note == null) return false;
+
+            return Name == note.Name && Octave.Number == note.Octave.Number;
+        }
+
+        public override string ToString()
+        {
+            return $"{Name}, {Octave.Number})";
+        }
     }
 
     public class NotifiedNote : Note

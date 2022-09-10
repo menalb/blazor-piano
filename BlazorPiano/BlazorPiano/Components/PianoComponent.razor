@@ -118,13 +118,17 @@
         isConnected = true;
     }
 
-    private void AttackANotifiedNote(NotifiedNote note)
+    private async Task AttackANotifiedNote(NotifiedNote note)
     {
         Service.OnAttackNote(note);
+
+        await AttackedNote(note);
     }
-    private void ReleaseANotifiedNote(NotifiedNote note)
+    private async Task ReleaseANotifiedNote(NotifiedNote note)
     {
         Service.OnReleaseNote(note);
+
+        await ReleasedNote(note);
     }
 
     private void PlayANotifiedNote(NotifiedNote note)
@@ -139,8 +143,6 @@
 
     private async Task AttackedNote(Note note)
     {
-        Console.WriteLine("Attack " + note.Name);        
-
         if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
         {
             await NotificationComponent.NotifyAttackNote(note);
@@ -149,8 +151,6 @@
 
     private async Task ReleasedNote(Note note)
     {
-        Console.WriteLine("Release " + note.Name);
-
         if (note is not ReplayNote)
         {
             playedNotes.Push(note);

@@ -57,8 +57,13 @@
     -webkit-transform: rotate(-135deg);
 }
 
-.fade-out {
-    -webkit-animation: fadeinout 1s linear forwards;
+.fade-in-out {
+    -webkit-animation: fade 1s linear forwards;
+    animation: fade 1s linear forwards;
+}
+
+.fade-in {
+    -webkit-animation: fadein 1s linear forwards;
     animation: fade 1s linear forwards;
 }
 
@@ -74,6 +79,51 @@
     }
 
     10% {
-        opacity: 1
+        opacity: 0.5;
+    }
+
+    20% {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    -webkit-animation: fadein 1s linear forwards;
+    animation: fadein 1s linear forwards;
+}
+
+@keyframes fadein {
+    0% {
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    1% {
+        visibility: visible;
+    }
+
+    10% {
+        opacity: 0.5;
+    }
+    20% {
+        opacity: 1;
+    }
+}
+
+
+.fade-out {
+    -webkit-animation: fadeout 1s linear forwards;
+    animation: fadeout 1s linear forwards;
+}
+
+@keyframes fadeout {
+
+    10% {
+        opacity: 1;        
+    }
+
+    100% {
+        opacity: 0;
+        visibility: hidden;
     }
 }

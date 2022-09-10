@@ -6,7 +6,7 @@
 <span class="@keyCss" @onmousedown="Attack" @onmouseup="Release">
     @if (showUsername)
     {
-        <span class="key-username key-username-color fade-out @usernameCss">
+        <span class="key-username key-username-color @usernameCss @fadeCss">
             <i class="arrow up"></i>
             @username
         </span>
@@ -36,6 +36,7 @@
     private string usernameCss = "";
     private string usernameColor = "";
     private bool showUsername = false;
+    private string fadeCss = "";
 
     [JSInvokable]
     private async Task PlayNote()
@@ -53,8 +54,6 @@
         await Piano.AttackNote(BuildKey());
 
         await AttackedNote.InvokeAsync(note);
-
-        //await PlayedNote.InvokeAsync(note);
     }
 
     private async Task Release()
@@ -64,9 +63,10 @@
         await ReleasedNote.InvokeAsync(note);
     }
 
+    // For now this method has to stay to support the MIDI controller
     private async Task ShouldPlayNote(Note noteToPlay)
-    {
-        if (note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number)
+    {        
+        if (IsThisNote(noteToPlay))
         {
             showUsername = false;
             await InvokeAsync(StateHasChanged);
@@ -79,6 +79,7 @@
                 var notifiedNote = noteToPlay as NotifiedNote;
                 username = notifiedNote.Username;
                 usernameColor = notifiedNote.Color;
+                fadeCss = "fade-in-out";
 
                 showUsername = true;
             }
@@ -90,12 +91,7 @@
 
             await InvokeAsync(StateHasChanged);
         }
-
     }
-
-    private bool IsThisNote(Note noteToPlay) 
-    => note.Name == noteToPlay.Name && note.Octave.Number == noteToPlay.Octave.Number;
-
 
     private async Task ShouldAttackNote(Note noteToPlay)
     {
@@ -111,6 +107,8 @@
                 var notifiedNote = noteToPlay as NotifiedNote;
                 username = notifiedNote.Username;
                 usernameColor = notifiedNote.Color;
+                
+                fadeCss = "fade-in";
 
                 showUsername = true;
             }
@@ -128,25 +126,10 @@
     {
         if (IsThisNote(noteToPlay))
         {
-            showUsername = false;
+            fadeCss = "fade-out";
             await InvokeAsync(StateHasChanged);
 
             await Piano.ReleaseNote(BuildKey());
-            await PlayedNote.InvokeAsync(noteToPlay);
-
-            //if (noteToPlay is NotifiedNote)
-            //{
-            //    var notifiedNote = noteToPlay as NotifiedNote;
-            //    username = notifiedNote.Username;
-            //    usernameColor = notifiedNote.Color;
-
-            //    showUsername = true;
-            //}
-            //else
-            //{
-            //    keyCss = "key " +
-            //        (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
-            //}
 
             await InvokeAsync(StateHasChanged);
         }
@@ -178,5 +161,8 @@
         Service.OnReleaseNote -= async (_note) =>
             await ShouldReleaseNote(_note);
     }
+
     private string BuildKey() => note.Name + note.Octave.Number;
+
+    private bool IsThisNote(Note noteToPlay) => note.Equals(noteToPlay);
 }
