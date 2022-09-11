@@ -129,7 +129,7 @@
 
     async Task Send(string action, Note note)
     {
-        Message message = new Message("sendmessage", new NoteToPlay(action, note.Name, note.Octave.Number));
+        Message message = new Message("playmessage", new NoteToPlay(action, note.Name, note.Octave.Number));
 
         var serializedMessage = System.Text.Json.JsonSerializer.Serialize(message, new JsonSerializerOptions()
             {
@@ -161,18 +161,7 @@
                 if (notification is not null && notification.message is not null && !string.IsNullOrEmpty(notification.message.note))
                 {
                     NotifiedNote receivedNote = new NotifiedNote("", notification.message.note, new Octave(notification.message.octave), notification.color, notification.username);
-                    if (notification.message.action == "attack")
-                    {
-                        await AttackNoteReceived.InvokeAsync(receivedNote);
-                    }
-                    else if (notification.message.action == "release")
-                    {
-                        await ReleaseNoteReceived.InvokeAsync(receivedNote);
-                    }
-                    else
-                    {
-                        await NoteReceived.InvokeAsync(receivedNote);
-                    }
+                    await InvokeNotifiedNote(notification.message.action, receivedNote);
                 }
                 else
                 {
@@ -196,6 +185,15 @@
             }
         }
     }
+
+    private Task InvokeNotifiedNote(string action, NotifiedNote receivedNote) =>
+        action switch
+        {
+            "attack" => AttackNoteReceived.InvokeAsync(receivedNote),
+            "release" => ReleaseNoteReceived.InvokeAsync(receivedNote),
+            _ => NoteReceived.InvokeAsync(receivedNote)
+        };
+
 
     public async Task Test()
     {
