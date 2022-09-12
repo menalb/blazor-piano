@@ -27,15 +27,60 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         Key: {
             connectionId: event.requestContext.connectionId
         }
-    };  
+    };
+    
+    try {
+        connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
+    } catch (e: any) {
+        return { statusCode: 500, body: e.stack };
+    }
+
+    const userLeft = connectionData.Items.find((u: any) => u.connectionId === event.requestContext.connectionId);
+
 
     try {
-        await docClient
-            .put(deleteParams)
-            .promise();
-        return { statusCode: 200, body: "Disconnected." };
+        await docClient.delete(deleteParams).promise();
     } catch (err) {
-        console.error(err);
-        return { statusCode: 500, body: "Disconnection failed." };
+        return { statusCode: 500, body: 'Failed to disconnect: ' + JSON.stringify(err) };
     }
+
+    const apigwManagementApi = new aws.ApiGatewayManagementApi({
+        apiVersion: '2018-11-29',
+        endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+    });
+
+    const postData = JSON.stringify({
+        action: 'player-disconnected',
+        user: { username: userLeft.username, color: userLeft.color }
+    });
+    console.log(userLeft);
+
+    const postCalls = connectionData.Items.map(async (item: any) => {
+        const connectionId = item.connectionId;
+        try {
+            //console.log(connectionId, users);
+            if (connectionId !== event.requestContext.connectionId) {
+
+
+                await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
+            }
+        } catch (e: any) {
+            if (e.statusCode === 410) {
+                console.log(`Found stale connection, deleting ${connectionId}`);
+                await docClient.delete({ TableName: ConnectionTableName, Key: { connectionId } }).promise();
+            } else {
+                throw e;
+            }
+        }
+    });
+
+    try {
+        await Promise.all(postCalls);
+    } catch (e: any) {
+        console.log(e);
+        return { statusCode: 500, body: e.stack };
+    }
+
+
+    return { statusCode: 200, body: 'Disconnected.' };
 };
