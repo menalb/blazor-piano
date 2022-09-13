@@ -88,7 +88,12 @@ const buildApiGWManagementApi = (requestContext: APIGatewayEventRequestContext) 
 
 const notifyNewConnectedUser = async (userInfo: ConnectedUserInfo, notifier: ApiGatewayManagementApi) => {
 
-    const connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
+    const scanParams = {
+        TableName: ConnectionTableName,
+        ProjectionExpression: 'connectionId,username,color'
+    };
+
+    const connectionData = await docClient.scan(scanParams).promise();
 
     if (!connectionData.Items) {
         return;

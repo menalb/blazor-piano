@@ -1,5 +1,6 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayEventRequestContext, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as aws from "aws-sdk";
+import { ApiGatewayManagementApi } from 'aws-sdk';
 
 /**
  *
@@ -14,55 +15,75 @@ import * as aws from "aws-sdk";
 const docClient = new aws.DynamoDB.DocumentClient();
 const ConnectionTableName = process.env.TABLE_NAME!;
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    let response: APIGatewayProxyResult;
-    let connectionData;
-    let userId = '';
-    let color = '';
-    let username = '';
-    let users = [];
+interface ConnectedUserInfo {
+    userId: string,
+    color: string,
+    username: string,
+    connectionId: string
+}
 
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+
+    if (!event.requestContext.connectionId) {
+        return { statusCode: 400, body: "Disconnection failed. Bad Request" };
+    }
+
+    try {
+        let connectedUsers = await getConnectedUsers();
+
+        await removeConnection(event.requestContext.connectionId);
+
+        if (connectedUsers) {
+            const userLeft = connectedUsers.find((u: any) => u.connectionId === event.requestContext.connectionId);
+
+            if (userLeft) {
+                await notifyNewConnectedUser(userLeft, connectedUsers, buildApiGWManagementApi(event.requestContext));
+            }
+        }
+        return { statusCode: 200, body: 'Disconnected.' };
+    } catch (e: any) {
+        console.log(e);
+        return { statusCode: 500, body: e.stack };
+    }
+};
+
+const removeConnection = async (connectionId: string) => {
     const deleteParams = {
         TableName: ConnectionTableName,
         Key: {
-            connectionId: event.requestContext.connectionId
+            connectionId: connectionId
         }
     };
-    
-    try {
-        connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
-    } catch (e: any) {
-        return { statusCode: 500, body: e.stack };
-    }
 
-    const userLeft = connectionData.Items.find((u: any) => u.connectionId === event.requestContext.connectionId);
+    await docClient.delete(deleteParams).promise();
+}
 
 
-    try {
-        await docClient.delete(deleteParams).promise();
-    } catch (err) {
-        return { statusCode: 500, body: 'Failed to disconnect: ' + JSON.stringify(err) };
-    }
+const getConnectedUsers = async () => {
 
-    const apigwManagementApi = new aws.ApiGatewayManagementApi({
+    const result = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
+
+    return result.Items as ConnectedUserInfo[];
+
+}
+const buildApiGWManagementApi = (requestContext: APIGatewayEventRequestContext) =>
+    new ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
-        endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+        endpoint: requestContext.domainName + '/' + requestContext.stage
     });
+
+const notifyNewConnectedUser = async (userInfo: ConnectedUserInfo, users: ConnectedUserInfo[], notifier: ApiGatewayManagementApi) => {
 
     const postData = JSON.stringify({
         action: 'player-disconnected',
-        user: { username: userLeft.username, color: userLeft.color }
+        user: { username: userInfo.username, color: userInfo.color }
     });
-    console.log(userLeft);
 
-    const postCalls = connectionData.Items.map(async (item: any) => {
+    const postCalls = users.map(async (item: any) => {
         const connectionId = item.connectionId;
         try {
-            //console.log(connectionId, users);
-            if (connectionId !== event.requestContext.connectionId) {
-
-
-                await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
+            if (connectionId !== userInfo.connectionId) {
+                await notifier.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
             }
         } catch (e: any) {
             if (e.statusCode === 410) {
@@ -73,14 +94,5 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             }
         }
     });
-
-    try {
-        await Promise.all(postCalls);
-    } catch (e: any) {
-        console.log(e);
-        return { statusCode: 500, body: e.stack };
-    }
-
-
-    return { statusCode: 200, body: 'Disconnected.' };
-};
+    await Promise.all(postCalls);
+}
