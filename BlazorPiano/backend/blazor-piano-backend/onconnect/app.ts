@@ -1,5 +1,6 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayEventRequestContext, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as aws from "aws-sdk";
+import { ApiGatewayManagementApi } from 'aws-sdk';
 
 /**
  *
@@ -14,64 +15,95 @@ import * as aws from "aws-sdk";
 const docClient = new aws.DynamoDB.DocumentClient();
 const ConnectionTableName = process.env.TABLE_NAME!;
 
-export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    let response: APIGatewayProxyResult;
-    let connectionData;
-    let userId = '';
-    let color = '';
-    let username = '';
-    let users = [];
+interface ConnectedUserInfo {
+    userId: string,
+    color: string,
+    username: string,
+    connectionId: string
+}
 
-    if (event.queryStringParameters) {
-        userId = event.queryStringParameters.userId;
-        color = event.queryStringParameters.color;
-        username = event.queryStringParameters.username;
+export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
+
+    const parseResult = tryParseEvent(event);
+
+    if (!parseResult) {
+        return { statusCode: 400, body: "Connection failed. Bad Request" };
     }
+
+    const userinfo: ConnectedUserInfo = parseResult;
+
+    try {
+        persistConnection(userinfo);
+
+        await notifyNewConnectedUser(userinfo, buildApiGWManagementApi(event.requestContext));
+
+        return {
+            statusCode: 200,
+            body: 'Connected'
+        };
+    } catch (e: any) {
+        console.log(e);
+        return { statusCode: 500, body: e.stack };
+    }
+};
+
+const tryParseEvent = (event: APIGatewayProxyEvent): ConnectedUserInfo | false => {
+    if (event.requestContext.connectionId &&
+        event.queryStringParameters &&
+        event.queryStringParameters.userId &&
+        event.queryStringParameters.color &&
+        event.queryStringParameters.username) {
+        return {
+            userId: event.queryStringParameters.userId,
+            color: event.queryStringParameters.color,
+            username: event.queryStringParameters.username,
+            connectionId: event.requestContext.connectionId
+        };
+    }
+    return false;
+}
+
+const persistConnection = async (userInfo: ConnectedUserInfo) => {
+
     const putParams = {
         TableName: ConnectionTableName,
         Item: {
-            connectionId: event.requestContext.connectionId,
-            userId: userId,
-            color: color,
-            username: username,
+            connectionId: userInfo.connectionId,
+            userId: userInfo.userId,
+            color: userInfo.color,
+            username: userInfo.username,
         }
     };
 
-    try {
-        await docClient
-            .put(putParams)
-            .promise();
-        //return { statusCode: 200, body: "Connected." };
-    } catch (err) {
-        console.error(err);
-        return { statusCode: 500, body: "Connection failed." };
-    }
+    await docClient
+        .put(putParams)
+        .promise();
+}
 
-    const apigwManagementApi = new aws.ApiGatewayManagementApi({
+const buildApiGWManagementApi = (requestContext: APIGatewayEventRequestContext) =>
+    new ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
-        endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+        endpoint: requestContext.domainName + '/' + requestContext.stage
     });
 
+const notifyNewConnectedUser = async (userInfo: ConnectedUserInfo, notifier: ApiGatewayManagementApi) => {
 
-    try {
-        connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
-    } catch (e: any) {
-        return { statusCode: 500, body: e.stack };
+    const connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
+
+    if (!connectionData.Items) {
+        return;
     }
 
-    users = connectionData.Items.map((item: any) => ({ color: item.color, username: item.username, connectionId: item.connectionId }));
+    const message = JSON.stringify({
+        action: 'player-connected',
+        user: { username: userInfo.username, color: userInfo.color }
+    });
 
     const postCalls = connectionData.Items.map(async (item: any) => {
         const connectionId = item.connectionId
         try {
-            //console.log(connectionId, users);
-            if (connectionId !== event.requestContext.connectionId) {
-                const postData = JSON.stringify({
-                    action: 'player-connected',
-                    user: { username: username, color: color }
-                });
-
-                await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
+            if (connectionId !== userInfo.connectionId) {
+                await notifier.postToConnection({ ConnectionId: connectionId, Data: message }).promise();
             }
         } catch (e: any) {
             if (e.statusCode === 410) {
@@ -87,13 +119,5 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
         await Promise.all(postCalls);
     } catch (e: any) {
         console.log(e);
-        return { statusCode: 500, body: e.stack };
     }
-
-
-    return {
-        statusCode: 200,
-        body: 'Connected'
-    };
-
-};
+}
