@@ -13,11 +13,18 @@ namespace BlazorPiano
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            //builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            builder.Services.AddScoped(sp => 
+            new HttpClient 
+            { 
+                BaseAddress = new Uri(builder.Configuration["BlazorPianoApi:Uri"] ?? throw new ArgumentNullException("Invalid BlazorPiano API Uri in configuration")) 
+            });
+
             builder.Services.AddScoped<PianoGateway>();
             builder.Services.AddSingleton<PianoService>();
             builder.Services.AddSingleton<BrowserResizeService>();
-            
+            builder.Services.AddScoped<ConnectedPlayersService>();
+
             builder.Services.AddSingleton(
                 new WebSocketApiConfig 
                 { 

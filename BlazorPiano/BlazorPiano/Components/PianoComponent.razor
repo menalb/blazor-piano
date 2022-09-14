@@ -1,6 +1,7 @@
 @using Model
 @inject PianoGateway Piano;
 @inject PianoService Service;
+@inject ConnectedPlayersService PlayersService;
 @inject BrowserResizeService BrowserResize;
 @implements IDisposable
 
@@ -46,10 +47,10 @@
                 <b style="color:@player.Color">
                     @player.Username
                 </b>
-                @if (player.IsYou)
+                @*@if (player.Username == use)
                 {
                     <i> (you) </i>
-                }
+                }*@
             </li>
         }
     </ul>
@@ -113,9 +114,14 @@
     //    StateHasChanged();
     //}
 
-    private void OnConnected()
+    private async Task OnConnected()
     {
         isConnected = true;
+
+        var connected = await PlayersService.GetConnectedPlayers();
+        if(connected is not null){
+            Players = connected.ToList();
+        }
     }
 
     private async Task AttackANotifiedNote(NotifiedNote note)
