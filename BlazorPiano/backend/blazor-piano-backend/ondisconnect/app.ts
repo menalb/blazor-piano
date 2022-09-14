@@ -58,14 +58,13 @@ const removeConnection = async (connectionId: string) => {
     await docClient.delete(deleteParams).promise();
 }
 
-
 const getConnectedUsers = async () => {
 
     const result = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
 
     return result.Items as ConnectedUserInfo[];
-
 }
+
 const buildApiGWManagementApi = (requestContext: APIGatewayEventRequestContext) =>
     new ApiGatewayManagementApi({
         apiVersion: '2018-11-29',

@@ -1,67 +1,85 @@
-import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayEventRequestContext, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import * as aws from "aws-sdk";
+import { ApiGatewayManagementApi } from 'aws-sdk';
 
 
 const docClient = new aws.DynamoDB.DocumentClient();
 const ConnectionTableName = process.env.TABLE_NAME!;
 
+interface ConnectedUserInfo {
+    userId: string,
+    color: string,
+    username: string,
+    connectionId: string
+}
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
-    let response: APIGatewayProxyResult;
-    let connectionData;
-    let userId = '';
-    let color = '';
-    let username = '';    
+    if (!event.requestContext.connectionId || !event.body) {
+        return { statusCode: 400, body: "Play Message failed. Bad Request" };
+    }
 
     try {
-        var params = {
-            TableName: ConnectionTableName,
-            Key: {
-                'connectionId': event.requestContext.connectionId
-            }
-        };
+        const userInfo = await getUserInfo(event.requestContext.connectionId);
 
-        console.log(params);
-        const data = await docClient.get(params).promise();
+        const connectedUsers = await getConnectedUsers();
 
-        console.log(data);
-        userId = data.Item.userId;
-        color = data.Item.color;
-        username = data.Item.username;                
+        const message = JSON.parse(event.body).data;
 
+        await notifyNewConnectedUser(userInfo, message, connectedUsers, buildApiGWManagementApi(event.requestContext));
+
+        return { statusCode: 200, body: 'Data sent.' };
     } catch (e) {
         console.log(e);
         return { statusCode: 500, body: 'FAILED!' };
-    }    
-
-    try {
-        connectionData = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId' }).promise();
-    } catch (e:any) {
-        return { statusCode: 500, body: e.stack };
     }
+};
 
-
-    const apigwManagementApi = new aws.ApiGatewayManagementApi({
+const buildApiGWManagementApi = (requestContext: APIGatewayEventRequestContext) =>
+    new ApiGatewayManagementApi({
         apiVersion: '2018-11-29',
-        endpoint: event.requestContext.domainName + '/' + event.requestContext.stage
+        endpoint: requestContext.domainName + '/' + requestContext.stage
     });
 
-    //const postData = `${userId} said: ${JSON.parse(event.body).data}`;
+const getUserInfo = async (connectionId: string): Promise<ConnectedUserInfo> => {
+    var params = {
+        TableName: ConnectionTableName,
+        Key: {
+            'connectionId': connectionId
+        }
+    };
+
+    const data = await docClient.get(params).promise();
+
+    return {
+        userId: data.Item.userId,
+        color: data.Item.color,
+        username: data.Item.username,
+        connectionId: connectionId
+    }
+}
+
+const getConnectedUsers = async () => {
+
+    const result = await docClient.scan({ TableName: ConnectionTableName, ProjectionExpression: 'connectionId,username,color' }).promise();
+
+    return result.Items as ConnectedUserInfo[];
+}
+
+const notifyNewConnectedUser = async (userInfo: ConnectedUserInfo, message: any, users: ConnectedUserInfo[], notifier: ApiGatewayManagementApi) => {
+
     const postData = JSON.stringify({
-        color: color,
-        username: username,
-        message: JSON.parse(event.body).data
+        color: userInfo.color,
+        username: userInfo.username,
+        message: message
     });
 
-    const postCalls = connectionData.Items.map(async (item: any) => {
+    const postCalls = users.map(async (item: any) => {
         const connectionId = item.connectionId;
-
         try {
-            console.log(connectionId);
-            if (connectionId !== event.requestContext.connectionId) {
-                await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
+            if (connectionId !== userInfo.connectionId) {
+                await notifier.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
             }
-        } catch (e:any) {
+        } catch (e: any) {
             if (e.statusCode === 410) {
                 console.log(`Found stale connection, deleting ${connectionId}`);
                 await docClient.delete({ TableName: ConnectionTableName, Key: { connectionId } }).promise();
@@ -70,14 +88,5 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             }
         }
     });
-
-    try {
-        await Promise.all(postCalls);
-    } catch (e:any) {
-        console.log(e);
-        return { statusCode: 500, body: e.stack };
-    }
-
-
-    return { statusCode: 200, body: 'Data sent.' };
-};
+    await Promise.all(postCalls);
+}
