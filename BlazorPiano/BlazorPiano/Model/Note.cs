@@ -20,8 +20,7 @@ namespace BlazorPiano.Model
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
-            Note note = obj as Note;
-            if (note == null) return false;
+            if (obj is not Note note) return false;
 
             return Name == note.Name && Octave.Number == note.Octave.Number;
         }
@@ -30,6 +29,8 @@ namespace BlazorPiano.Model
         {
             return $"{Name}, {Octave.Number})";
         }
+
+        public override int GetHashCode() => HashCode.Combine(Name, Octave.Number);
     }
 
     public class NotifiedNote : Note
