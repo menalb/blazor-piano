@@ -21,9 +21,10 @@ namespace BlazorPiano
             });
 
             builder.Services.AddScoped<PianoGateway>();
-            builder.Services.AddSingleton<PianoService>();
-            builder.Services.AddSingleton<BrowserResizeService>();
             builder.Services.AddScoped<ConnectedPlayersService>();
+            builder.Services.AddSingleton<PianoService>();
+            builder.Services.AddSingleton<PlayerService>();
+            builder.Services.AddSingleton<BrowserResizeService>();            
 
             builder.Services.AddSingleton(
                 new WebSocketApiConfig 

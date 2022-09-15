@@ -1,6 +1,7 @@
 @using Model
 @inject Services.PianoGateway Piano;
 @inject Services.PianoService Service;
+@inject Services.PlayerService PlayerService;
 @inject Services.ConnectedPlayersService PlayersService;
 @inject Services.BrowserResizeService BrowserResize;
 @implements IDisposable
@@ -39,7 +40,7 @@
 
                    PlayerJoined="((player)=> OnPayerJoined(player))"
                    PlayerLeft="((player)=> OnPayerLeft(player))"
-                   Connected="(e)=>OnConnected()" />
+                   Connected="(e)=>OnConnected(e)" />
     <ul class="list-group">
         @foreach (var player in Players)
         {
@@ -47,10 +48,10 @@
                 <b style="color:@player.Color">
                     @player.Username
                 </b>
-                @*@if (player.Username == use)
+                @if (PlayerService.LocalConnectedPlayer.IsYou(player.Username))
                 {
                     <i> (you) </i>
-                }*@
+                }
             </li>
         }
     </ul>
@@ -114,9 +115,11 @@
     //    StateHasChanged();
     //}
 
-    private async Task OnConnected()
+    private async Task OnConnected(PlayerInfo connectedPlayer)
     {
         isConnected = true;
+
+        PlayerService.LocalPlayerConnected(connectedPlayer);
 
         var connected = await PlayersService.GetConnectedPlayers();
         if(connected is not null){

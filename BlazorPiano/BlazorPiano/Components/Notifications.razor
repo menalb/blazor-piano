@@ -51,23 +51,23 @@
 </div>*@
 @code {
 
-    [Parameter]
-    public EventCallback<bool> Connected { get; set; }
-    [Parameter]
-    public EventCallback<NotifiedNote> NoteReceived { get; set; }
+        [Parameter]
+        public EventCallback<Model.PlayerInfo> Connected { get; set; }
+        [Parameter]
+        public EventCallback<NotifiedNote> NoteReceived { get; set; }
 
-    [Parameter]
-    public EventCallback<NotifiedNote> AttackNoteReceived { get; set; }
-    [Parameter]
-    public EventCallback<NotifiedNote> ReleaseNoteReceived { get; set; }
+        [Parameter]
+        public EventCallback<NotifiedNote> AttackNoteReceived { get; set; }
+        [Parameter]
+        public EventCallback<NotifiedNote> ReleaseNoteReceived { get; set; }
 
-    [Parameter]
-    public EventCallback<PlayerInfo> PlayerJoined { get; set; }
-    [Parameter]
-    public EventCallback<PlayerInfo> PlayerLeft { get; set; }
+        [Parameter]
+        public EventCallback<PlayerInfo> PlayerJoined { get; set; }
+        [Parameter]
+        public EventCallback<PlayerInfo> PlayerLeft { get; set; }
 
-    CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
-    ClientWebSocket webSocket = new ClientWebSocket();
+        CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
+        ClientWebSocket webSocket = new ClientWebSocket();
     private EditContext editContext;
 
     private ConnectedUserModel connectUserModel { get; set; }
@@ -121,7 +121,7 @@
 
             if (webSocket.State == WebSocketState.Open)
             {
-                await Connected.InvokeAsync();
+                await Connected.InvokeAsync(new Model.PlayerInfo(connectUserModel.Username, color));
             }
             _ = ReceiveLoop();
         }
@@ -167,7 +167,7 @@
                 {
                     var action = System.Text.Json.JsonSerializer.Deserialize<NotifiedActionMessage>(receivedAsText);
                     Console.WriteLine($"{action.action}");
-                    var playerInfo = new PlayerInfo(action.user.username, action.user.color, action.user.is_you);
+                    var playerInfo = new PlayerInfo(action.user.username, action.user.color);
                     if (action.action == "player-connected")
                     {
                         await PlayerJoined.InvokeAsync(playerInfo);
@@ -237,7 +237,7 @@
 
     private record NotifiedMessage(string color, NoteToPlay message, string username);
 
-    private record NotifiedPlayer(string username, string color, bool is_you);
+    private record NotifiedPlayer(string username, string color);
 
     private record NotifiedActionMessage(string action, NotifiedPlayer user);
 }
