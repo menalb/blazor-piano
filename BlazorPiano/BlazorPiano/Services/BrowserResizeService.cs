@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System;
 using System.Runtime.CompilerServices;
 
-namespace BlazorPiano
+namespace BlazorPiano.Services
 {
     public class BrowserResizeService
     {
@@ -14,7 +14,7 @@ namespace BlazorPiano
         public BrowserResizeService(IJSRuntime js)
         {
             this.js = js;
-         }
+        }
 
         [JSInvokable]
         public async Task OnBrowserResize()

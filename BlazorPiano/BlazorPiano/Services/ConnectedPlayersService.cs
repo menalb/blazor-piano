@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-namespace BlazorPiano
+namespace BlazorPiano.Services
 {
     public class ConnectedPlayersService
     {

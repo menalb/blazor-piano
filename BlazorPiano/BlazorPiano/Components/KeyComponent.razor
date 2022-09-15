@@ -1,6 +1,6 @@
 @using Model
-@inject PianoGateway Piano;
-@inject PianoService Service;
+@inject Services.PianoGateway Piano;
+@inject Services.PianoService Service;
 @implements IDisposable
 
 <span class="@keyCss" @onmousedown="Attack" @onmouseup="Release">

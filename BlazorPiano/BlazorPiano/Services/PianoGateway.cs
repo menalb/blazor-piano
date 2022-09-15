@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 
-namespace BlazorPiano
+namespace BlazorPiano.Services
 {
     public class PianoGateway
     {

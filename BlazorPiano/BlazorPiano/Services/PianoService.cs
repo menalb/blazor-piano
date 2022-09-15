@@ -1,7 +1,7 @@
 using System;
 using BlazorPiano.Model;
 
-namespace BlazorPiano
+namespace BlazorPiano.Services
 {
     public class PianoService
     {
