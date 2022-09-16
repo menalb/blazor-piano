@@ -41,7 +41,7 @@
                    PlayerLeft="((player)=> OnPayerLeft(player))"
                    Connected="(e)=>OnConnected(e)"
                    Disconnected="()=>OnDisconnected()" />
-     <ul class="list-group">
+    <ul class="list-group">
         @foreach (var player in Players)
         {
             <li class="list-group-item">
@@ -56,12 +56,13 @@
         }
     </ul>
 </section>
+
 @if (playedNotes.Any())
 {
     <section class="played-notes">
-        <div>
-            <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
-        </div>
+
+        <button type="button" class="btn btn-secondary" @onclick="Reset">Reset</button>
+
         <div class="played-notes-container">
             @foreach (var note in playedNotes)
             {

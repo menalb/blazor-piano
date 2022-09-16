@@ -14,13 +14,13 @@
 
     @if (webSocket.State != WebSocketState.Open)
     {
-        <EditForm EditContext="@editContext" class="" OnSubmit="@HandleConnect">
-            <div class="form-group mb-3 row">
-                <label for="username" class="col-form-label col-sm-2">Enter your name:</label>
+        <EditForm EditContext="@editContext" class="form-inline" OnSubmit="@HandleConnect">
+            <div class="form-group mb-3">
+                <label for="username" class="col-form-label">Enter your name:</label>
 
                 <InputText id="username"
                        @bind-Value="connectUserModel.Username"
-                       class="form-control col-sm-6"
+                       class="form-control"
                        placeholder="Enter your name to connect"
                        aria-label="Name" />
 

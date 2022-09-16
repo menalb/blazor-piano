@@ -6,23 +6,23 @@
         margin-right: 1rem;
     }
 
-.played-notes {
-    padding: 1rem 0;
-}
-
 .piano-keyboard {
     text-align: center;
 }
 
+.played-notes {    
+    padding: 2rem 1rem 1rem 2rem;
+}
+
+
 .played-notes-container {
-    padding-top: 1rem;
-    
+    padding-top: 1rem;    
 }
     .played-notes-container button{
         margin: 0.125rem;
     }
 
-    .played-note {
-        padding: 0.25rem;
-        font-weight: bold;
-    }
+.played-note {
+    padding: 0.25rem;
+    font-weight: bold;    
+}
