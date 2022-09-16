@@ -1,4 +1,5 @@
 @using Model
+@using System.Threading
 @inject Services.PianoGateway Piano;
 @inject Services.PianoService Service;
 @implements IDisposable
@@ -8,7 +9,9 @@
     {
         <span class="key-username key-username-color @usernameCss @fadeCss">
             <i class="arrow up"></i>
-            @username
+            <span class="key-username-text">
+                @username
+            </span>            
         </span>
     }
     @BuildKey()
@@ -18,6 +21,12 @@
     .key-username-color {
         color: @usernameColor;
         font-weight: bold;
+    }
+
+    .key-username-text {
+        border: @usernameColor 1px solid;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
     }
 </style>
 @code {
@@ -51,7 +60,7 @@
 
     private async Task Attack()
     {
-        await Piano.AttackNote(BuildKey());
+        await Piano.AttackNote(BuildKey());        
 
         await AttackedNote.InvokeAsync(note);
     }
@@ -65,7 +74,7 @@
 
     // For now this method has to stay to support the MIDI controller
     private async Task ShouldPlayNote(Note noteToPlay)
-    {        
+    {
         if (IsThisNote(noteToPlay))
         {
             showUsername = false;
@@ -107,18 +116,28 @@
                 var notifiedNote = noteToPlay as NotifiedNote;
                 username = notifiedNote.Username;
                 usernameColor = notifiedNote.Color;
-                
+
                 fadeCss = "fade-in";
 
                 showUsername = true;
+                await InvokeAsync(StateHasChanged);
+
+                await SafeReleaseAfter(3000);
             }
             else
             {
                 keyCss = "key " +
                     (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
-            }
+                await InvokeAsync(StateHasChanged);
+            }            
+        }
+    }
 
-            await InvokeAsync(StateHasChanged);
+    private async Task SafeReleaseAfter(int releaseAfterInmilliseconds){
+        await Task.Delay(releaseAfterInmilliseconds);
+        if (showUsername)
+        {
+            await ShouldReleaseNote(note);
         }
     }
 

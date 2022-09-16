@@ -43,31 +43,33 @@
         </div>
     }
 </section>
-@*<div>
+<div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
-</div>*@
+</div>
 @code {
 
-        [Parameter]
-        public EventCallback<Model.PlayerInfo> Connected { get; set; }
-        [Parameter]
-        public EventCallback<NotifiedNote> NoteReceived { get; set; }
+    [Parameter]
+    public EventCallback<Model.PlayerInfo> Connected { get; set; }
+    [Parameter]
+    public EventCallback Disconnected { get; set; }
+    [Parameter]
+    public EventCallback<NotifiedNote> NoteReceived { get; set; }
 
-        [Parameter]
-        public EventCallback<NotifiedNote> AttackNoteReceived { get; set; }
-        [Parameter]
-        public EventCallback<NotifiedNote> ReleaseNoteReceived { get; set; }
+    [Parameter]
+    public EventCallback<NotifiedNote> AttackNoteReceived { get; set; }
+    [Parameter]
+    public EventCallback<NotifiedNote> ReleaseNoteReceived { get; set; }
 
-        [Parameter]
-        public EventCallback<PlayerInfo> PlayerJoined { get; set; }
-        [Parameter]
-        public EventCallback<PlayerInfo> PlayerLeft { get; set; }
+    [Parameter]
+    public EventCallback<PlayerInfo> PlayerJoined { get; set; }
+    [Parameter]
+    public EventCallback<PlayerInfo> PlayerLeft { get; set; }
 
-        CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
-        ClientWebSocket webSocket = new ClientWebSocket();
+    CancellationTokenSource disposalTokenSource = new CancellationTokenSource();
+    ClientWebSocket webSocket = new ClientWebSocket();
     private EditContext editContext;
 
     private ConnectedUserModel connectUserModel { get; set; }
@@ -203,8 +205,8 @@
 
         await AttackNoteReceived.InvokeAsync(receivedNote);
 
-        await Task.Delay(2000);
-        await ReleaseNoteReceived.InvokeAsync(receivedNote);
+        //await Task.Delay(2000);
+        //await ReleaseNoteReceived.InvokeAsync(receivedNote);
     }
     //public async Task Test()
     //{
@@ -217,12 +219,14 @@
         connectUserModel = new ConnectedUserModel();
         disposalTokenSource.Cancel();
         _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+        Disconnected.InvokeAsync();
     }
 
     public void Dispose()
     {
         disposalTokenSource.Cancel();
         _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
+        Disconnected.InvokeAsync();
     }
 
     private record ConnectedUserModel

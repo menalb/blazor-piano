@@ -37,11 +37,11 @@
                    NoteReceived="((note)=> PlayANotifiedNote(note))"
                    AttackNoteReceived="((note)=> AttackANotifiedNote(note))"
                    ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"
-
                    PlayerJoined="((player)=> OnPayerJoined(player))"
                    PlayerLeft="((player)=> OnPayerLeft(player))"
-                   Connected="(e)=>OnConnected(e)" />
-    <ul class="list-group">
+                   Connected="(e)=>OnConnected(e)"
+                   Disconnected="()=>OnDisconnected()" />
+     <ul class="list-group">
         @foreach (var player in Players)
         {
             <li class="list-group-item">
@@ -122,9 +122,15 @@
         PlayerService.LocalPlayerConnected(connectedPlayer);
 
         var connected = await PlayersService.GetConnectedPlayers();
-        if(connected is not null){
+        if (connected is not null)
+        {
             Players = connected.ToList();
         }
+    }
+
+    private void OnDisconnected()
+    {
+        Players = new List<PlayerInfo>();
     }
 
     private async Task AttackANotifiedNote(NotifiedNote note)
@@ -152,6 +158,11 @@
 
     private async Task AttackedNote(Note note)
     {
+        if (note is not ReplayNote)
+        {
+            playedNotes.Push(note);
+        }
+
         if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
         {
             await NotificationComponent.NotifyAttackNote(note);
@@ -160,11 +171,6 @@
 
     private async Task ReleasedNote(Note note)
     {
-        if (note is not ReplayNote)
-        {
-            playedNotes.Push(note);
-        }
-
         if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
         {
             await NotificationComponent.NotifyReleaseNote(note);
