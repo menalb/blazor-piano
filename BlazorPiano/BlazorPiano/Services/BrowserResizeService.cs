@@ -1,35 +1,44 @@
 ﻿using Microsoft.JSInterop;
 using System.Threading.Tasks;
 using System;
-using System.Runtime.CompilerServices;
 
 namespace BlazorPiano.Services
 {
     public class BrowserResizeService
     {
-        public event Func<Task> OnResize;
+        public event EventHandler<Size> OnResize;        
 
-        private readonly IJSRuntime js;
+        private readonly IJSRuntime _js;
 
         public BrowserResizeService(IJSRuntime js)
         {
-            this.js = js;
+            _js = js;
         }
-
-        [JSInvokable]
-        public async Task OnBrowserResize()
+        public async void Init(object component)
         {
-            await OnResize?.Invoke();
-        }
+            await _js.InvokeAsync<string>("browserResize.registerResizeCallback", DotNetObjectReference.Create(component));
+        }       
+
+        public void Resize(int width, int height)
+        {
+            OnResize?.Invoke(this, new(width,height));
+        }     
 
         public async Task<int> GetInnerHeight()
         {
-            return await js.InvokeAsync<int>("browserResize.getInnerHeight");
+            return await _js.InvokeAsync<int>("browserResize.getInnerHeight");
         }
 
         public async Task<int> GetInnerWidth()
         {
-            return await js.InvokeAsync<int>("browserResize.getInnerWidth");
+            return await _js.InvokeAsync<int>("browserResize.getInnerWidth");
         }
-    }
+
+        public async Task<Size> GetSize()
+        {
+            return new(await GetInnerWidth(), await GetInnerHeight());
+        }
+
+        public record Size(int Width, int Height);
+    }    
 }

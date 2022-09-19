@@ -23,7 +23,7 @@
 </nav>
 
 <section class="piano-keyboard">
-    @for (int i = 2; i < 6; i++)
+    @for (int i = startingOctave; i < startingOctave + nOctaves; i++)
     {
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))"
                      AttackedNote="((note) => AttackedNote(note))"
@@ -78,17 +78,13 @@
     </section>
 }
 
-@*<div>
-    <p><strong>Inner Height</strong> @InnerHeight</p>
-    <p><strong>Inner Width</strong> @InnerWidth</p>
-</div>*@
+<PianoResizeComponent />
+
 @code {
-    //int InnerHeight = 0;
-    //int InnerWidth = 0;
-
-
     private Stack<Note> playedNotes = new Stack<Note>();
     private Octave octave = new Octave(1);
+    private int startingOctave = 2;
+    private int nOctaves = 6;
     private bool pianoButtonDisabled = true;
     private bool synthButtonDisabled = false;
 
@@ -100,21 +96,47 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //BrowserResize.OnResize += BrowserHasResized;
-
         await Init();
         Service.OnPlayNote += (_note) => StateHasChanged();
         Service.OnAttackNote += (note) => StateHasChanged();
         Service.OnReleaseNote += (note) => StateHasChanged();
+
+        BrowserResize.OnResize += (c, s) => OnResize(s);
     }
 
-    //private async Task BrowserHasResized()
-    //{
-    //    InnerHeight = await BrowserResize.GetInnerHeight();
-    //    InnerWidth = await BrowserResize.GetInnerWidth();
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            OnResize(await BrowserResize.GetSize());
+        }
+    }
 
-    //    StateHasChanged();
-    //}
+    private void OnResize(Services.BrowserResizeService.Size size)
+    {
+        if (size.Width < 970)
+        {
+            startingOctave = 3;
+            nOctaves = 2;
+        }
+        else if (size.Width >= 970 && size.Width < 1300)
+        {
+            startingOctave = 3;
+            nOctaves = 3;
+        }
+        else if (size.Width >= 1300 && size.Width < 1600)
+        {
+            startingOctave = 2;
+            nOctaves = 4;
+        }
+        else
+        {
+            startingOctave = 2;
+            nOctaves = 5;
+        }
+        Console.WriteLine(nOctaves);
+        StateHasChanged();
+    }
 
     private async Task OnConnected(PlayerInfo connectedPlayer)
     {
@@ -235,10 +257,10 @@
 
     public void Dispose()
     {
-        //BrowserResize.OnResize -= BrowserHasResized;
         Service.OnPlayNote -= (note) => StateHasChanged();
         Service.OnAttackNote -= (note) => StateHasChanged();
         Service.OnReleaseNote -= (note) => StateHasChanged();
-    }
 
+        BrowserResize.OnResize -= (c, s) => OnResize(s);
+    }
 }

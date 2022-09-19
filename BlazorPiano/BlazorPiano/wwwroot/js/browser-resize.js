@@ -1,15 +1,20 @@
 ﻿window.browserResize = {
-    getInnerHeight: function () {
+    getInnerHeight: function () {        
         return window.innerHeight;
     },
-    getInnerWidth: function () {
+    getInnerWidth: function () {        
         return window.innerWidth;
     },
-    registerResizeCallback: function () {
-        window.addEventListener("resize", browserResize.resized);
+    registerResizeCallback: function (dotNetObject) {        
+        window.addEventListener("resize", () => {
+            browserResize.resized(dotNetObject);
+        });
     },
-    resized: function () {
-        //DotNet.invokeMethod("BrowserResize", 'OnBrowserResize');
-        DotNet.invokeMethodAsync("BrowserResize", 'OnBrowserResize').then(data => data);
+    resized: function (obj) {                
+        obj.invokeMethodAsync('SetBrowserDimensions', window.innerWidth, window.innerHeight)
+            .then(data => data)
+            .catch(error => {
+                console.log("Error during browser resize: " + error);
+            });
     }
 }
