@@ -116,7 +116,7 @@
     {
         startingOctave = size.startingOctave;
         nOctaves = size.nOctaves;
-        
+
         StateHasChanged();
     }
 
@@ -135,6 +135,7 @@
 
     private void OnDisconnected()
     {
+        isConnected = false;
         Players = new List<PlayerInfo>();
     }
 
@@ -164,11 +165,11 @@
     private async Task AttackedNote(Note note)
     {
         if (note is not ReplayNote)
-        {
+        {        
             playedNotes.Push(note);
         }
 
-        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        if (ShouldNotify(note))
         {
             await NotificationComponent.NotifyAttackNote(note);
         }
@@ -176,7 +177,7 @@
 
     private async Task ReleasedNote(Note note)
     {
-        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        if (ShouldNotify(note))
         {
             await NotificationComponent.NotifyReleaseNote(note);
         }
@@ -191,11 +192,14 @@
             playedNotes.Push(note);
         }
 
-        if (note is not NotifiedNote && isConnected && NotificationComponent is not null)
+        if (ShouldNotify(note))
         {
             await NotificationComponent.NotifyNote(note);
         }
     }
+
+    private bool ShouldNotify(Note note) =>    
+        note is not ReplayNote && note is not NotifiedNote && isConnected && NotificationComponent is not null;    
 
     private ReplayNote BuildReplayNote(Note note)
     {
