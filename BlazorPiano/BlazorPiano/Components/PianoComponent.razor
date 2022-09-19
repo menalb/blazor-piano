@@ -78,8 +78,6 @@
     </section>
 }
 
-<PianoResizeComponent />
-
 @code {
     private Stack<Note> playedNotes = new Stack<Note>();
     private Octave octave = new Octave(1);
@@ -101,40 +99,24 @@
         Service.OnAttackNote += (note) => StateHasChanged();
         Service.OnReleaseNote += (note) => StateHasChanged();
 
-        BrowserResize.OnResize += (c, s) => OnResize(s);
+        BrowserResize.Init();
+
+        BrowserResize.OnPianoResize += (c, s) => OnResize(s);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            OnResize(await BrowserResize.GetSize());
+            OnResize(await BrowserResize.GetPianoSize());
         }
     }
 
-    private void OnResize(Services.BrowserResizeService.Size size)
+    private void OnResize(Services.BrowserResizeService.PianoSize size)
     {
-        if (size.Width < 970)
-        {
-            startingOctave = 3;
-            nOctaves = 2;
-        }
-        else if (size.Width >= 970 && size.Width < 1300)
-        {
-            startingOctave = 3;
-            nOctaves = 3;
-        }
-        else if (size.Width >= 1300 && size.Width < 1600)
-        {
-            startingOctave = 2;
-            nOctaves = 4;
-        }
-        else
-        {
-            startingOctave = 2;
-            nOctaves = 5;
-        }
-        Console.WriteLine(nOctaves);
+        startingOctave = size.startingOctave;
+        nOctaves = size.nOctaves;
+        
         StateHasChanged();
     }
 
@@ -261,6 +243,6 @@
         Service.OnAttackNote -= (note) => StateHasChanged();
         Service.OnReleaseNote -= (note) => StateHasChanged();
 
-        BrowserResize.OnResize -= (c, s) => OnResize(s);
+        BrowserResize.OnPianoResize -= (c, s) => OnResize(s);
     }
 }
