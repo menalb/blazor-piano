@@ -36,25 +36,10 @@
     <Notifications @ref="NotificationComponent"
                    NoteReceived="((note)=> PlayANotifiedNote(note))"
                    AttackNoteReceived="((note)=> AttackANotifiedNote(note))"
-                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"
-                   PlayerJoined="((player)=> OnPayerJoined(player))"
-                   PlayerLeft="((player)=> OnPayerLeft(player))"
+                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"                   
                    Connected="(e)=>OnConnected(e)"
-                   Disconnected="()=>OnDisconnected()" />
-    <ul class="list-group">
-        @foreach (var player in Players)
-        {
-            <li class="list-group-item">
-                <b style="color:@player.Color">
-                    @player.Username
-                </b>
-                @if (PlayerService.LocalConnectedPlayer.IsYou(player.Username))
-                {
-                    <i> (you) </i>
-                }
-            </li>
-        }
-    </ul>
+                   Disconnected="()=>OnDisconnected()"
+                   />   
 </section>
 
 @if (playedNotes.Any())
@@ -88,8 +73,6 @@
 
     private Notifications NotificationComponent;
 
-    private List<PlayerInfo> Players = new List<PlayerInfo>();
-
     private bool isConnected = false;
 
     protected override async Task OnInitializedAsync()
@@ -120,23 +103,14 @@
         StateHasChanged();
     }
 
-    private async Task OnConnected(PlayerInfo connectedPlayer)
+    private void OnConnected(PlayerInfo connectedPlayer)
     {
-        isConnected = true;
-
-        PlayerService.LocalPlayerConnected(connectedPlayer);
-
-        var connected = await PlayersService.GetConnectedPlayers();
-        if (connected is not null)
-        {
-            Players = connected.ToList();
-        }
+        isConnected = true;        
     }
 
     private void OnDisconnected()
     {
-        isConnected = false;
-        Players = new List<PlayerInfo>();
+        isConnected = false;        
     }
 
     private async Task AttackANotifiedNote(NotifiedNote note)
@@ -218,21 +192,7 @@
         await Piano.SwitchToSinth();
         synthButtonDisabled = true;
         pianoButtonDisabled = false;
-    }
-
-    private void OnPayerJoined(PlayerInfo player)
-    {
-        Players.Add(player);
-    }
-
-    private void OnPayerLeft(PlayerInfo player)
-    {
-        var playerToRemove = Players.SingleOrDefault(p => p.Username == player.Username);
-        if (playerToRemove is not null)
-        {
-            Players.Remove(playerToRemove);
-        }
-    }
+    } 
 
     private async Task Init()
     {

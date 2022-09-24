@@ -5,6 +5,8 @@
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.Extensions.Options
 @using Model
+@inject Services.PlayerService PlayerService;
+@inject Services.ConnectedPlayersService PlayersService;
 @inject IOptions<OnlineConfiguration> onlineConfiguration
 @implements IDisposable
 
@@ -45,13 +47,30 @@
                 </div>
             </div>
         }
-    </section>   
+    </section>
     @*<div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
 </div>*@
+
+    <section>
+        <ul class="list-group">
+            @foreach (var player in Players)
+            {
+                <li class="list-group-item">
+                    <b style="color:@player.Color">
+                        @player.Username
+                    </b>
+                    @if (PlayerService.LocalConnectedPlayer.IsYou(player.Username))
+                    {
+                        <i> (you) </i>
+                    }
+                </li>
+            }
+        </ul>
+    </section>
 }
 @code {
 
@@ -79,6 +98,10 @@
     private ConnectedUserModel connectUserModel { get; set; }
 
     private Random rnd = new Random();
+
+    private List<PlayerInfo> Players = new List<PlayerInfo>();
+
+    private bool isConnected = false;
 
     protected override void OnInitialized()
     {
@@ -127,6 +150,8 @@
 
             if (webSocket.State == WebSocketState.Open)
             {
+                await OnConnected(new Model.PlayerInfo(connectUserModel.Username, color));
+
                 await Connected.InvokeAsync(new Model.PlayerInfo(connectUserModel.Username, color));
             }
             _ = ReceiveLoop();
@@ -176,10 +201,14 @@
                     var playerInfo = new PlayerInfo(action.user.username, action.user.color);
                     if (action.action == "player-connected")
                     {
+                        OnPayerJoined(playerInfo);
+
                         await PlayerJoined.InvokeAsync(playerInfo);
                     }
                     if (action.action == "player-disconnected")
                     {
+                        OnPayerLeft(playerInfo);
+
                         await PlayerLeft.InvokeAsync(playerInfo);
                     }
                 }
@@ -224,6 +253,41 @@
         disposalTokenSource.Cancel();
         _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
         Disconnected.InvokeAsync();
+        OnDisconnected();
+    }
+
+
+     private async Task OnConnected(PlayerInfo connectedPlayer)
+    {
+        isConnected = true;
+
+        PlayerService.LocalPlayerConnected(connectedPlayer);
+
+        var connected = await PlayersService.GetConnectedPlayers();
+        if (connected is not null)
+        {
+            Players = connected.ToList();
+        }
+    }
+
+    private void OnDisconnected()
+    {
+        isConnected = false;
+        Players = new List<PlayerInfo>();
+    }
+
+    private void OnPayerJoined(PlayerInfo player)
+    {
+        Players.Add(player);
+    }
+
+    private void OnPayerLeft(PlayerInfo player)
+    {
+        var playerToRemove = Players.SingleOrDefault(p => p.Username == player.Username);
+        if (playerToRemove is not null)
+        {
+            Players.Remove(playerToRemove);
+        }
     }
 
     public void Dispose()
