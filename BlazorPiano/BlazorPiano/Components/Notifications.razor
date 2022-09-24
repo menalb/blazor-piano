@@ -3,52 +3,56 @@
 @using System.Text
 @using System.Text.Json
 @using System.ComponentModel.DataAnnotations
+@using Microsoft.Extensions.Options
 @using Model
-@inject WebSocketApiConfig websocketConfig
+@inject IOptions<OnlineConfiguration> onlineConfiguration
 @implements IDisposable
 
-<section>
-    <h2>
-        Play with the community!
-    </h2>
+@if (onlineConfiguration is not null && onlineConfiguration.Value.IsOnline)
+{
+    <section>
+        <h2>
+            Play with the community!
+        </h2>
 
-    @if (webSocket.State != WebSocketState.Open)
-    {
-        <EditForm EditContext="@editContext" class="form-inline" OnSubmit="@HandleConnect">
-            <div class="form-group mb-3">
-                <label for="username" class="col-form-label">Enter your name:</label>
+        @if (webSocket.State != WebSocketState.Open)
+        {
+            <EditForm EditContext="@editContext" class="form-inline" OnSubmit="@HandleConnect">
+                <div class="form-group mb-3">
+                    <label for="username" class="col-form-label">Enter your name:</label>
 
-                <InputText id="username"
+                    <InputText id="username"
                        @bind-Value="connectUserModel.Username"
                        class="form-control"
                        placeholder="Enter your name to connect"
                        aria-label="Name" />
 
-                <button type="submit" class="btn btn-secondary">Connect</button>
-            </div>
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-        </EditForm>
-    }
+                    <button type="submit" class="btn btn-secondary">Connect</button>
+                </div>
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+            </EditForm>
+        }
 
-    @if (webSocket.State == WebSocketState.Open)
-    {
-        <div>
+        @if (webSocket.State == WebSocketState.Open)
+        {
             <div>
-                <span title="connected" class="dot connected"></span> Connected!
+                <div>
+                    <span title="connected" class="dot connected"></span> Connected!
+                </div>
+                <div>
+                    <button type="button" class="btn btn-secondary" @onclick="Disconnect">Disconnect</button>
+                </div>
             </div>
-            <div>
-                <button type="button" class="btn btn-secondary" @onclick="Disconnect">Disconnect</button>
-            </div>
-        </div>
-    }
-</section>
-@*<div>
+        }
+    </section>   
+    @*<div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
 </div>*@
+}
 @code {
 
     [Parameter]
@@ -116,7 +120,7 @@
             string[] colors = new string[] { "red", "green", "brown", "orange", "purle", "darkgray" };
             string color = colors[rnd.Next(0, 4)];
             await webSocket.ConnectAsync(new Uri(
-                $"{websocketConfig.Uri}?userId={userId}&username={connectUserModel.Username}&color={color}"
+                $"{onlineConfiguration.Value.WebSocketConfiguration.Uri}?userId={userId}&username={connectUserModel.Username}&color={color}"
             ),
                 disposalTokenSource.Token
             );
