@@ -48,12 +48,12 @@
             </div>
         }
     </section>
-    @*<div>
+    <div>
     <button type="button" class="btn btn-secondary"
             @onclick="Test">
         Test
     </button>
-</div>*@
+</div>
 
     <section>
         <ul class="list-group">
@@ -233,13 +233,13 @@
     public async Task Test()
     {
         var receivedNote = new NotifiedNote("", "G#", new Octave(4), "red", "Gigi");
-        await NoteReceived.InvokeAsync(receivedNote);
-        await Task.Delay(2000);
+        //await NoteReceived.InvokeAsync(receivedNote);
+        //await Task.Delay(2000);
 
         await AttackNoteReceived.InvokeAsync(receivedNote);
 
-        //await Task.Delay(2000);
-        //await ReleaseNoteReceived.InvokeAsync(receivedNote);
+        await Task.Delay(500);
+        await ReleaseNoteReceived.InvokeAsync(receivedNote);
     }
     //public async Task Test()
     //{
@@ -257,7 +257,7 @@
     }
 
 
-     private async Task OnConnected(PlayerInfo connectedPlayer)
+    private async Task OnConnected(PlayerInfo connectedPlayer)
     {
         isConnected = true;
 
@@ -279,6 +279,7 @@
     private void OnPayerJoined(PlayerInfo player)
     {
         Players.Add(player);
+        StateHasChanged();
     }
 
     private void OnPayerLeft(PlayerInfo player)
@@ -288,6 +289,7 @@
         {
             Players.Remove(playerToRemove);
         }
+        StateHasChanged();
     }
 
     public void Dispose()

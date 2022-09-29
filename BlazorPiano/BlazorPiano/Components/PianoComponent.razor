@@ -26,8 +26,6 @@
     @for (int i = startingOctave; i < startingOctave + nOctaves; i++)
     {
         <OctaveComponent PlayedNote="((note) => PlayedNote(note))"
-                     AttackedNote="((note) => AttackedNote(note))"
-                     ReleasedNote="((note) => ReleasedNote(note))"
                      octaveNumber="@BuildOctave(i)">
         </OctaveComponent>
     }
@@ -36,10 +34,9 @@
     <Notifications @ref="NotificationComponent"
                    NoteReceived="((note)=> PlayANotifiedNote(note))"
                    AttackNoteReceived="((note)=> AttackANotifiedNote(note))"
-                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"                   
+                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"
                    Connected="(e)=>OnConnected(e)"
-                   Disconnected="()=>OnDisconnected()"
-                   />   
+                   Disconnected="()=>OnDisconnected()" />
 </section>
 
 @if (playedNotes.Any())
@@ -78,9 +75,9 @@
     protected override async Task OnInitializedAsync()
     {
         await Init();
-        Service.OnPlayNote += (_note) => StateHasChanged();
-        Service.OnAttackNote += (note) => StateHasChanged();
-        Service.OnReleaseNote += (note) => StateHasChanged();
+        Service.OnPlayNote += (_note) => StateHasChanged();        
+        Service.OnAttackNote += AttackedNote;
+        Service.OnReleaseNote +=ReleasedNote;
 
         BrowserResize.Init();
 
@@ -105,25 +102,22 @@
 
     private void OnConnected(PlayerInfo connectedPlayer)
     {
-        isConnected = true;        
+        isConnected = true;
     }
 
     private void OnDisconnected()
     {
-        isConnected = false;        
+        isConnected = false;
     }
 
-    private async Task AttackANotifiedNote(NotifiedNote note)
-    {
-        Service.OnAttackNote(note);
-
-        await AttackedNote(note);
+    private void AttackANotifiedNote(NotifiedNote note)
+    {        
+        Service.AttackNote(note);
+        playedNotes.Push(note);
     }
-    private async Task ReleaseANotifiedNote(NotifiedNote note)
-    {
-        Service.OnReleaseNote(note);
-
-        await ReleasedNote(note);
+    private void ReleaseANotifiedNote(NotifiedNote note)
+    {        
+        Service.ReleaseNote(note);
     }
 
     private void PlayANotifiedNote(NotifiedNote note)
@@ -139,7 +133,7 @@
     private async Task AttackedNote(Note note)
     {
         if (note is not ReplayNote)
-        {        
+        {
             playedNotes.Push(note);
         }
 
@@ -147,10 +141,13 @@
         {
             await NotificationComponent.NotifyAttackNote(note);
         }
+
+        //StateHasChanged();
     }
 
     private async Task ReleasedNote(Note note)
     {
+        StateHasChanged();
         if (ShouldNotify(note))
         {
             await NotificationComponent.NotifyReleaseNote(note);
@@ -172,8 +169,8 @@
         }
     }
 
-    private bool ShouldNotify(Note note) =>    
-        note is not ReplayNote && note is not NotifiedNote && isConnected && NotificationComponent is not null;    
+    private bool ShouldNotify(Note note) =>
+        note is not ReplayNote && note is not NotifiedNote && isConnected && NotificationComponent is not null;
 
     private ReplayNote BuildReplayNote(Note note)
     {
@@ -192,7 +189,7 @@
         await Piano.SwitchToSinth();
         synthButtonDisabled = true;
         pianoButtonDisabled = false;
-    } 
+    }
 
     private async Task Init()
     {
@@ -203,9 +200,9 @@
 
     public void Dispose()
     {
-        Service.OnPlayNote -= (note) => StateHasChanged();
-        Service.OnAttackNote -= (note) => StateHasChanged();
-        Service.OnReleaseNote -= (note) => StateHasChanged();
+        Service.OnPlayNote -= (note) => StateHasChanged();        
+        Service.OnAttackNote -= AttackedNote;
+        Service.OnReleaseNote -= ReleasedNote;
 
         BrowserResize.OnPianoResize -= (c, s) => OnResize(s);
     }

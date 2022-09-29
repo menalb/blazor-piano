@@ -11,7 +11,7 @@
             <i class="arrow up"></i>
             <span class="key-username-text">
                 @username
-            </span>            
+            </span>
         </span>
     }
     @BuildKey()
@@ -53,16 +53,16 @@
         if (note.IsValid())
         {
             await Piano.PlayNote(BuildKey());
-
-            // StateHasChanged();
         }
     }
 
     private async Task Attack()
     {
-        await Piano.AttackNote(BuildKey());        
+        await Piano.AttackNote(BuildKey());
 
         await AttackedNote.InvokeAsync(note);
+
+        Service.NotifyAttackedNote(note);
     }
 
     private async Task Release()
@@ -70,6 +70,8 @@
         await Piano.ReleaseNote(BuildKey());
 
         await ReleasedNote.InvokeAsync(note);
+
+        Service.NotifyReleasedNote(note);
     }
 
     // For now this method has to stay to support the MIDI controller
@@ -101,11 +103,11 @@
             await InvokeAsync(StateHasChanged);
         }
     }
-
+    
     private async Task ShouldAttackNote(Note noteToPlay)
     {
         if (IsThisNote(noteToPlay))
-        {
+        {            
             showUsername = false;
             await InvokeAsync(StateHasChanged);
 
@@ -129,11 +131,12 @@
                 keyCss = "key " +
                     (keyCss.Contains("key-played-odd") ? "key-played-even" : " key-played-odd");
                 await InvokeAsync(StateHasChanged);
-            }            
+            }
         }
     }
 
-    private async Task SafeReleaseAfter(int releaseAfterInmilliseconds){
+    private async Task SafeReleaseAfter(int releaseAfterInmilliseconds)
+    {
         await Task.Delay(releaseAfterInmilliseconds);
         if (showUsername)
         {
@@ -145,6 +148,8 @@
     {
         if (IsThisNote(noteToPlay))
         {
+            showUsername = false;
+            
             fadeCss = "fade-out";
             await InvokeAsync(StateHasChanged);
 
@@ -156,29 +161,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await Task.Run(() =>
-        {
-            Service.OnPlayNote += async (_note) =>
-            await ShouldPlayNote(_note);
+        Service.OnPlayNote += async (_note) =>
+           await ShouldPlayNote(_note);        
 
-            Service.OnAttackNote += async (_note) =>
-            await ShouldAttackNote(_note);
+         Service.OnToAttackNote += ShouldAttackNote;
 
-            Service.OnReleaseNote += async (_note) =>
-            await ShouldReleaseNote(_note);
-        });
+         Service.OnToReleaseNote += ShouldReleaseNote;
+
+        await Task.CompletedTask;
     }
-
+   
     public void Dispose()
     {
         Service.OnPlayNote -= async (_note) =>
-            await ShouldPlayNote(_note);
+            await ShouldPlayNote(_note);     
 
-        Service.OnAttackNote -= async (_note) =>
-            await ShouldAttackNote(_note);
+        Service.OnToAttackNote -= ShouldAttackNote;
 
-        Service.OnReleaseNote -= async (_note) =>
-            await ShouldReleaseNote(_note);
+        Service.OnToReleaseNote -= ShouldReleaseNote;
     }
 
     private string BuildKey() => note.Name + note.Octave.Number;

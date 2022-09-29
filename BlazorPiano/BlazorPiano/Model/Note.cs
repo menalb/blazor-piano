@@ -27,7 +27,7 @@ namespace BlazorPiano.Model
 
         public override string ToString()
         {
-            return $"{Name}, {Octave.Number})";
+            return $"{Name}, {Octave.Number}";
         }
 
         public override int GetHashCode() => HashCode.Combine(Name, Octave.Number);
