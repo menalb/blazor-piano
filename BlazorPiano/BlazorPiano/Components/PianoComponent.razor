@@ -31,9 +31,8 @@
     }
 </section>
 <section class="notifications">
-    <Notifications NoteReceived="((note)=> PlayANotifiedNote(note))"
-                   AttackNoteReceived="((note)=> AttackANotifiedNote(note))"
-                   ReleaseNoteReceived="((note)=> ReleaseANotifiedNote(note))"
+    <Notifications NoteReceived="((note)=> PlayANote(note))"
+                   AttackNoteReceived="((note)=> PlayANote(note))"                   
                    Connected="(e)=>OnConnected(e)"
                    Disconnected="()=>OnDisconnected()" />
 </section>
@@ -107,23 +106,9 @@
         isConnected = false;
     }
 
-    private void AttackANotifiedNote(NotifiedNote note)
-    {    
-        playedNotes.Push(note);
-    }
-
-    private void ReleaseANotifiedNote(NotifiedNote note)
-    {     
-    }
-
-    private void PlayANotifiedNote(NotifiedNote note)
-    {
-        Service.OnPlayNote(note);
-    }
-
     private void PlayANote(Note note)
     {
-        Service.OnPlayNote(note);
+        Service.PlayNote(note);
     }
 
     private void AttackedNote(Note note)

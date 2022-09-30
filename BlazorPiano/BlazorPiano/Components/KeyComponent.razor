@@ -103,7 +103,7 @@
             await InvokeAsync(StateHasChanged);
         }
     }
-    
+
     private async Task ShouldAttackNote(Note noteToPlay)
     {
         if (IsThisNote(noteToPlay))
@@ -159,20 +159,18 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Service.OnPlayNote += async (_note) =>
-           await ShouldPlayNote(_note);        
+        Service.OnPlayNoteAsync += ShouldPlayNote;
 
-         Service.OnToAttackNote += ShouldAttackNote;
+        Service.OnToAttackNote += ShouldAttackNote;
 
-         Service.OnToReleaseNote += ShouldReleaseNote;
+        Service.OnToReleaseNote += ShouldReleaseNote;
 
         await Task.CompletedTask;
     }
-   
+
     public void Dispose()
     {
-        Service.OnPlayNote -= async (_note) =>
-            await ShouldPlayNote(_note);     
+        Service.OnPlayNoteAsync -= ShouldPlayNote;
 
         Service.OnToAttackNote -= ShouldAttackNote;
 

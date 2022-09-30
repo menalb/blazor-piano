@@ -112,6 +112,7 @@
 
         PianoService.OnAttackNoteAsync += AttackedNote;
         PianoService.OnReleaseNoteAsync += ReleasedNote;
+        PianoService.OnPlayNoteAsync += PlayNote;
     }
 
     public async Task NotifyNote(Note note)
@@ -327,6 +328,14 @@
         }
     }
 
+    private async Task PlayNote(Note note)
+    {
+        if (ShouldNotify(note))
+        {
+            await NotifyNote(note);
+        }
+    }
+
     private bool ShouldNotify(Note note) =>
         note is not ReplayNote && note is not NotifiedNote && isConnected;
 
@@ -338,6 +347,7 @@
 
         PianoService.OnAttackNoteAsync -= AttackedNote;
         PianoService.OnReleaseNoteAsync -= ReleasedNote;
+        PianoService.OnPlayNoteAsync -= PlayNote;
     }
 
     private record ConnectedUserModel

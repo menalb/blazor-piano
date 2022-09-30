@@ -15,6 +15,9 @@ public class PianoService
     public event Func<Note,Task> OnToAttackNote;
     public event Func<Note,Task> OnToReleaseNote;
 
+    public event Action<Note> OnPlayNote;
+    public event Func<Note,Task> OnPlayNoteAsync;
+
     public void NotifyAttackedNote(Note note)
     {        
         OnAttackNoteAsync?.Invoke(note);
@@ -36,13 +39,15 @@ public class PianoService
     {
         OnToReleaseNote?.Invoke(note);
     }
-
-    [Obsolete]
-    public Action<Note> OnPlayNote;
+        
     public void PlayNote(Note note)
     {
         NotifyStateChanged(note);
     }
 
-    private void NotifyStateChanged(Note note) => OnPlayNote?.Invoke(note);
+    private void NotifyStateChanged(Note note)
+    {
+        OnPlayNote?.Invoke(note);
+        OnPlayNoteAsync?.Invoke(note);
+    }
 }
