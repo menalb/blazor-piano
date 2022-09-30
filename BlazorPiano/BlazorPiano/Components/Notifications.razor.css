@@ -1,6 +1,6 @@
 ﻿.dot {
     height: 15px;
-    width: 15px;    
+    width: 15px;
     border-radius: 50%;
     display: inline-block;
 }
@@ -8,3 +8,10 @@
 .connected {
     background-color: green;
 }
+
+.notification-panel .form-group {
+    width: 100%;
+}
+    .notification-panel .form-group #username {
+        padding: 1rem;
+    }

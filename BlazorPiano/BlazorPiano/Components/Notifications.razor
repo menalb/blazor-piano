@@ -7,12 +7,13 @@
 @using Model
 @inject Services.PlayerService PlayerService;
 @inject Services.ConnectedPlayersService PlayersService;
+@inject Services.PianoService PianoService;
 @inject IOptions<OnlineConfiguration> onlineConfiguration
 @implements IDisposable
 
 @if (onlineConfiguration is not null && onlineConfiguration.Value.IsOnline)
 {
-    <section>
+    <section class="notification-panel">
         <h2>
             Play with the community!
         </h2>
@@ -49,11 +50,11 @@
         }
     </section>
     <div>
-    <button type="button" class="btn btn-secondary"
+        <button type="button" class="btn btn-secondary"
             @onclick="Test">
-        Test
-    </button>
-</div>
+            Test
+        </button>
+    </div>
 
     <section>
         <ul class="list-group">
@@ -107,6 +108,9 @@
     {
         connectUserModel = new ConnectedUserModel { Username = "" };
         editContext = new(connectUserModel);
+
+        PianoService.OnAttackNoteAsync += AttackedNote;
+        PianoService.OnReleaseNoteAsync += ReleasedNote;
     }
 
     public async Task NotifyNote(Note note)
@@ -224,11 +228,22 @@
     private Task InvokeNotifiedNote(string action, NotifiedNote receivedNote) =>
         action switch
         {
-            "attack" => AttackNoteReceived.InvokeAsync(receivedNote),
-            "release" => ReleaseNoteReceived.InvokeAsync(receivedNote),
+            "attack" => OnAttackNoteReceived(receivedNote),
+            "release" => OnReleaseNoteReceived(receivedNote),
             _ => NoteReceived.InvokeAsync(receivedNote)
         };
 
+    private async Task OnAttackNoteReceived(NotifiedNote receivedNote)
+    {
+        PianoService.AttackNote(receivedNote);
+        await AttackNoteReceived.InvokeAsync(receivedNote);
+    }
+
+    private async Task OnReleaseNoteReceived(NotifiedNote receivedNote)
+    {
+        PianoService.ReleaseNote(receivedNote);
+        await ReleaseNoteReceived.InvokeAsync(receivedNote);
+    }
 
     public async Task Test()
     {
@@ -289,14 +304,35 @@
         {
             Players.Remove(playerToRemove);
         }
-        StateHasChanged();
     }
+
+    private async Task AttackedNote(Note note)
+    {
+        if (ShouldNotify(note))
+        {
+            await NotifyAttackNote(note);
+        }
+    }
+
+    private async Task ReleasedNote(Note note)
+    {
+        if (ShouldNotify(note))
+        {
+            await NotifyReleaseNote(note);
+        }
+    }
+
+    private bool ShouldNotify(Note note) =>
+        note is not ReplayNote && note is not NotifiedNote && isConnected;
 
     public void Dispose()
     {
         disposalTokenSource.Cancel();
         _ = webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Bye", CancellationToken.None);
         Disconnected.InvokeAsync();
+
+        PianoService.OnAttackNoteAsync -= AttackedNote;
+        PianoService.OnReleaseNoteAsync -= ReleasedNote;
     }
 
     private record ConnectedUserModel
